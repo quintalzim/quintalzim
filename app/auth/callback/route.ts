@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { destinoParaTipo } from "@/lib/supabase/destino-pos-auth";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
@@ -13,7 +14,8 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      const destino = type === "recovery" ? "/redefinir-senha" : next;
+      return NextResponse.redirect(`${origin}${destino}`);
     }
 
     const url = new URL("/entrar", origin);

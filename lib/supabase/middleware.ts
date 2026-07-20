@@ -33,6 +33,9 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // /redefinir-senha fica de fora de propósito: usuário em recovery já TEM
+  // sessão e precisa continuar nessa página até trocar a senha, não pular
+  // pro /app. A própria página exige sessão e cuida do redirect de sucesso.
   if (user && request.nextUrl.pathname.startsWith("/entrar")) {
     const url = request.nextUrl.clone();
     url.pathname = "/app/inicio";

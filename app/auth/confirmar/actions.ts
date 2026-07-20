@@ -2,11 +2,8 @@
 
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
+import { destinoParaTipo } from "@/lib/supabase/destino-pos-auth";
 import { createClient } from "@/lib/supabase/server";
-
-function destinoParaTipo(type: string) {
-  return type === "recovery" ? "/redefinir-senha" : "/app/inicio";
-}
 
 export async function confirmarAcesso(formData: FormData) {
   const tokenHash = formData.get("token_hash");
