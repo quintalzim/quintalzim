@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export default function HeaderApp({ email }: { email: string }) {
+export default function HeaderApp({ nome }: { nome: string }) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -20,10 +20,10 @@ export default function HeaderApp({ email }: { email: string }) {
         Quintalzim
       </Link>
       <div className="flex items-center gap-3">
-        <span className="hidden text-sm text-tinta-suave sm:inline">{email}</span>
+        <span className="hidden text-sm font-semibold text-tinta sm:inline">Oi, {nome} 🌱</span>
         <button
           onClick={handleSair}
-          className="text-sm font-semibold text-terracota-escuro hover:underline"
+          className="text-sm font-semibold text-terracota-escuro hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-verde rounded"
         >
           Sair
         </button>

@@ -33,5 +33,12 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  if (user && request.nextUrl.pathname.startsWith("/entrar")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/app/inicio";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
   return supabaseResponse;
 }
