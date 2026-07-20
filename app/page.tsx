@@ -1,26 +1,39 @@
-import ListaEsperaForm from "@/components/ListaEsperaForm";
+import type { Metadata } from "next";
+import LandingHeader from "@/components/landing/LandingHeader";
+import Hero from "@/components/landing/Hero";
+import Varal from "@/components/landing/Varal";
+import CapturaEmail from "@/components/landing/CapturaEmail";
+import ProntimSection from "@/components/landing/ProntimSection";
+import PortoesSection from "@/components/landing/PortoesSection";
+import LandingFooter from "@/components/landing/LandingFooter";
+
+const titulo = "Quintalzim — Vem aí";
+const descricao =
+  "Um lugar só, no seu WhatsApp, pra resolver as coisas da vida e do seu negócio.";
+
+export const metadata: Metadata = {
+  title: titulo,
+  description: descricao,
+  openGraph: {
+    title: titulo,
+    description: descricao,
+    type: "website",
+    locale: "pt_BR",
+  },
+};
 
 export default function Home() {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center bg-papel px-6 py-16">
-      <main className="flex w-full max-w-md flex-col items-center gap-8 text-center">
-        <span className="font-titulo text-4xl font-extrabold text-verde-escuro">
-          Quintalzim
-        </span>
-
-        <div className="flex flex-col gap-3">
-          <h1 className="text-3xl font-extrabold leading-tight text-tinta">
-            Vem aí o seu Quintalzim
-          </h1>
-          <p className="text-base text-tinta-suave">
-            O portal que junta os serviços da sua cidade num lugar só, com a
-            ajuda do Prontim. Deixa seu e-mail que a gente te avisa assim que
-            abrir.
-          </p>
-        </div>
-
-        <ListaEsperaForm />
+    <div className="flex flex-1 flex-col bg-papel">
+      <LandingHeader />
+      <main className="flex flex-1 flex-col">
+        <Hero />
+        <Varal />
+        <CapturaEmail />
+        <ProntimSection />
+        <PortoesSection />
       </main>
+      <LandingFooter />
     </div>
   );
 }

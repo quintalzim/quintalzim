@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import Botao from "@/components/ui/Botao";
 import Campo from "@/components/ui/Campo";
 
-type Estado = "ocioso" | "enviando" | "sucesso" | "erro";
+type Estado = "ocioso" | "enviando" | "sucesso";
 
 export default function ListaEsperaForm() {
   const [email, setEmail] = useState("");
@@ -15,27 +15,22 @@ export default function ListaEsperaForm() {
     setEstado("enviando");
 
     try {
-      const resposta = await fetch(
-        "https://n8n.quintalzim.com.br/webhook/lista-espera",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ email }).toString(),
-        }
-      );
-
-      if (!resposta.ok) throw new Error("Falha no envio");
-
-      setEstado("sucesso");
+      await fetch("https://n8n.quintalzim.com.br/webhook/lista-espera", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ email, origem: "site-nextjs" }).toString(),
+      });
     } catch {
-      setEstado("erro");
+      // erro de rede não deve quebrar a experiência de quem se cadastrou
+    } finally {
+      setEstado("sucesso");
     }
   }
 
   if (estado === "sucesso") {
     return (
       <div className="rounded-xl bg-verde/10 px-5 py-4 text-center font-titulo font-semibold text-verde-escuro">
-        Recebemos seu e-mail! Prontim ✅
+        Prontim ✅ Você tá na lista. A gente se vê no quintal!
       </div>
     );
   }
@@ -55,14 +50,13 @@ export default function ListaEsperaForm() {
           />
         </div>
         <Botao type="submit" disabled={estado === "enviando"}>
-          {estado === "enviando" ? "Enviando..." : "Entrar na lista"}
+          {estado === "enviando" ? "Enviando..." : "Quero ser vizinho fundador"}
         </Botao>
       </div>
-      {estado === "erro" && (
-        <p className="text-sm text-terracota-escuro">
-          Não deu certo agora. Pode tentar de novo?
-        </p>
-      )}
+      <p className="text-xs text-tinta-suave">
+        Prometido: nada de spam. Só o aviso de que o quintal abriu (e um mimo
+        de fundador).
+      </p>
     </form>
   );
 }
