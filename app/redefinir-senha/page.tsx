@@ -10,7 +10,7 @@ export default async function RedefinirSenhaPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/entrar?erro=callback");
+    redirect("/entrar?erro=link-invalido");
   }
 
   return (

@@ -18,7 +18,7 @@ function EntrarConteudo() {
   const searchParams = useSearchParams();
   const supabase = createClient();
 
-  const avisoCallback = searchParams.get("erro") === "callback";
+  const avisoLinkInvalido = searchParams.get("erro") === "link-invalido";
 
   const [aba, setAba] = useState<Aba>("entrar");
   const [modo, setModo] = useState<Modo>("padrao");
@@ -144,9 +144,9 @@ function EntrarConteudo() {
           <p className="text-tinta-suave">Bem-vindo de volta. Vamos entrar?</p>
         </div>
 
-        {avisoCallback && (
+        {avisoLinkInvalido && (
           <p className="rounded-lg bg-terracota/10 px-4 py-3 text-center text-sm font-semibold text-terracota-escuro">
-            Esse link não é mais válido. Peça um novo aqui embaixo.
+            Esse link venceu ou já foi usado. Pede outro que a gente manda na hora.
           </p>
         )}
 

@@ -51,7 +51,7 @@ export default function FormularioNovaSenha() {
   if (sucesso) {
     return (
       <p className="rounded-lg bg-verde/10 px-4 py-3 text-center text-sm font-semibold text-verde-escuro">
-        Senha nova salva! Te levando pro seu quintal... 🌱
+        Senha nova no cadeado! Prontim ✅
       </p>
     );
   }
