@@ -16,17 +16,25 @@ export default function CardQuintalFinancas() {
   async function handleAbrir() {
     setAbrindo(true);
 
+    const novaAba = window.open("", "_blank");
+    if (novaAba) {
+      novaAba.opener = null;
+    }
+
     const {
       data: { session },
     } = await supabase.auth.getSession();
 
     if (!session) {
+      novaAba?.close();
       router.push("/entrar");
       return;
     }
 
     const hash = `access_token=${session.access_token}&refresh_token=${session.refresh_token}`;
-    window.open(`${URL_FINANCAS}/#${hash}`, "_blank", "noopener,noreferrer");
+    if (novaAba) {
+      novaAba.location.href = `${URL_FINANCAS}/#${hash}`;
+    }
     setAbrindo(false);
   }
 
