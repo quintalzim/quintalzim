@@ -1,7 +1,12 @@
+import CardQuintalFinancas from "@/components/app/CardQuintalFinancas";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
 
-const categorias = ["Serviços da cidade", "Saúde", "Negócios locais", "Utilidades"];
+const emBreve = [
+  { titulo: "Calorias por Foto 📸", descricao: "Tira uma foto do prato e pronto." },
+  { titulo: "Briefings do Dia ☀️", descricao: "Um resumo rapidinho pra começar o dia." },
+  { titulo: "Prontim no WhatsApp 💬", descricao: "Seu Prontim direto no zap." },
+];
 
 export default function CatalogoPage() {
   return (
@@ -11,11 +16,16 @@ export default function CatalogoPage() {
         <p className="text-tinta-suave">Todos os mini-apps e serviços num lugar só.</p>
       </div>
 
-      <div className="flex flex-col gap-3">
-        {categorias.map((categoria) => (
-          <Card key={categoria} className="flex items-center justify-between">
-            <span className="font-titulo font-semibold text-tinta">{categoria}</span>
-            <Selo variante="terracota">Em breve</Selo>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <CardQuintalFinancas />
+
+        {emBreve.map((item) => (
+          <Card key={item.titulo} className="flex flex-col gap-2 opacity-70">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-tinta">{item.titulo}</h2>
+              <Selo variante="terracota">Em breve</Selo>
+            </div>
+            <p className="text-sm text-tinta-suave">{item.descricao}</p>
           </Card>
         ))}
       </div>
