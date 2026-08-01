@@ -1,0 +1,241 @@
+# QUINTALZIM — Documento de Contexto do Projeto
+
+*Versão 1.2 — agosto/2026. Este documento dá contexto completo a qualquer nova conversa. Atualizar ao fim de sessões que mudem decisões, arquitetura ou estado.*
+
+*Mudanças da v1.1: separação formal dos dois modelos de negócio (B2C direto e B2B2C), arquitetura de WhatsApp definida (número próprio do Quintalzim vs número de cada Empresa via Coexistence/Embedded Signup), "Plano B" de onboarding sem WhatsApp (cadastro direto no ecossistema via PWA), e mudança de precificação da Meta anunciada para 1/out/2026.*
+
+*Mudanças da v1.2: fluxo "Prontim - Atendimento" revalidado, corrigido e republicado; Facebook e Instagram do Quintalzim já reservados; as 5 conversas de validação de campo com donos de negócio já foram realizadas (aprendizados a registrar).*
+
+---
+
+## 1. O QUE É O QUINTALZIM
+
+Portal único (super app PWA) por assinatura para pessoas e pequenas empresas de **cidades pequenas do Brasil**. O cliente paga o portal, não cada item: dentro dele há apps, ferramentas de IA, automações, conteúdos e serviços, com uma IA concierge que entende a dor e monta a solução.
+
+**Importante — dois modelos de negócio coexistem sob a mesma marca** (detalhado na seção 10): um **B2C direto** (assinante Pessoa Física fala com o Quintalzim) e um **B2B2C** (Empresa assina o Quintalzim, mas quem usa o produto no dia a dia é o cliente final da Empresa, que muitas vezes nunca ouviu falar do Quintalzim). Cada modelo tem canais, números de WhatsApp e papel do Prontim diferentes — nunca tratar os dois como a mesma coisa ao desenhar um fluxo novo.
+
+**Fundador:** empreendedor solo, usando IA em todo o processo de construção. Possui um SaaS de finanças pessoais já pronto (mesma stack do projeto, com APIs) que será integrado como módulo — **já integrado via SSO** (ver seção 6). Objetivo: MRR significativo (referência: ~R$ 19 mil em 12-18 meses), não unicórnio.
+
+**Marca:**
+- Nome: **Quintalzim** (domínio quintalzim.com.br registrado; DNS no Cloudflare)
+- Concierge/mascote: **Prontim** — a voz da IA. Confirma tarefas com "Prontim ✅"
+- Slogan (proposta): "Resolve no Quintalzim"
+- Tom de voz: vizinho competente do interior — simples, caloroso, direto, sem tecniquês. Nunca vende "IA/tecnologia"; vende o resultado ("responda seus clientes 24h")
+- Identidade visual: Q ornamentado (cobre/verde, referência às vinhas/folhas) já aplicado como favicon e ícone PWA nos dois apps (Quintalzim e Quintal de Finanças); paleta verde-folha (#3F6B34) + creme (#FBF7EC) + terracota/laranja, tipografia arredondada, ilustrações estilo desenhado à mão (quintal: varal, portãozinho, plantas)
+- E-mail do projeto: meuquintalzim@gmail.com
+
+**Princípios inegociáveis:**
+1. Curadoria de tudo (conteúdo honesto; nunca promessas de enriquecimento fácil)
+2. Dado único, várias bocas: informação entra uma vez, sai em todas as interfaces
+3. Confiança em cidade pequena se constrói com prova local; um incidente queima a marca
+4. Limites de uso justos por plano + modelos de IA baratos para volume (proteção de margem)
+5. **Custo de infraestrutura (Meta/WhatsApp, IA) nunca é repassado à parte pro cliente — sempre embutido na mensalidade.** Nunca prometer "sem custo" sem qualificar "pra você", já que pode deixar de ser literalmente gratuito pro Quintalzim (ver seção 10.4)
+
+---
+
+## 2. MODELO DE RECEITA — A ESCADA
+
+| Degrau | Faixa | Papel |
+|---|---|---|
+| PF Base | R$ 19–39/mês | Volume, porta de entrada |
+| PF Premium | R$ 39–59/mês | Acompanhamento ativo via WhatsApp |
+| Empresa Start | R$ 79/mês | Vitrine + agendamento + catálogo básico |
+| Empresa Pro | R$ 149/mês | + Recepcionista IA + posts diários |
+| Empresa Completo | R$ 199–249/mês | + vendas, despesas, DRE, clube de assinaturas* |
+| Profissional | R$ 29–49/mês | Perfil no marketplace + recomendação da IA |
+| Sob medida | R$ 300–1.500 setup + mensalidade | Financia o ano 1; laboratório do SaaS |
+
+\* Fase 2. Complementos: setup de Vitrine (R$ 97–197), comissões de marketplace (5–12%, Fase 2), criadores externos (take 20–30%, Fase 2).
+
+Custo estimado de IA por assinante ativo: PF R$ 3–8/mês; Empresa R$ 10–30/mês. **A partir de out/2026, somar custo de mensageria WhatsApp por assinante Empresa (ver seção 10.4) — valor exato ainda não publicado pela Meta.**
+
+---
+
+## 3. CATÁLOGO — MÓDULOS DEFINIDOS
+
+**Padrão arquitetural de todos os módulos:** motor com API + interface conversacional (WhatsApp ou chat no PWA, dependendo do modelo — ver seção 10) por cima + dashboard visual.
+
+### Lado Pessoa Física (modelo B2C direto)
+- **Finanças Pessoais:** SaaS existente do fundador vira motor+dashboard; chat (WhatsApp do Quintalzim ou chat web) vira interface ("almocei, gastei 25" → registrado; consultas com contexto; resumos proativos). **Integração SSO com o Quintal de Finanças já construída e em produção** (login único, catálogo, handoff)
+- **Calorias por foto:** foto do prato → IA conta calorias. O "wow" de demonstração. Ainda não iniciado
+- **Quiz-Funil saúde/fitness** (estilo BetterMe): jornada visual → diagnóstico → oferta personalizada → plano real de hábitos com check-ins. Motor genérico em JSON, replicável (quiz finanças, diagnóstico do negócio). Funil principal de aquisição PF
+- **Briefings Inteligentes:** resumo diário por temas (push do PWA como canal principal — ver seção 10.5 — com opção WhatsApp/áudio), cruzando dados pessoais. Arquitetura um-para-muitos: 1 workflow por tema gera resumo-base (1 chamada cara/dia), distribuição personaliza com Haiku. Custo ≈ zero por assinante. Isca: 7 dias grátis
+- **Utilitários** (regra: máx 2-3 dias de produção cada; 1-2/semana pós-lançamento): conversor extrato→Excel (alimenta finanças/DRE), calculadoras (juros, dívidas, preço de serviço), gerador de recibos, gerador de bio/legenda. Funções: volume percebido, aquisição orgânica (versão grátis limitada), moeda de promoção
+
+### Lado Empresa — esteira "Vitrine do Cliente" (modelo B2B2C, espinha dorsal)
+Cinco camadas empilháveis; cada uma cria necessidade da próxima:
+1. **Presença:** mini-site multi-tenant gerado por IA (portal.com.br/nome-do-negocio)
+2. **Atendimento:** Recepcionista IA — agendamento via WhatsApp da própria Empresa (Coexistence) **ou** via cadastro direto do cliente final no ecossistema Quintalzim (Plano B, seção 10.3) → alerta ao dono → confirmação em 1 toque vira venda. Lembretes anti-falta 24h/2h (sempre pagos no WhatsApp; grátis via push do PWA no Plano B)
+3. **Conteúdo:** posts automáticos diários com dados reais da Vitrine/catálogo
+4. **Gestão:** vendas → relatórios → despesas (mesmo motor das finanças PF) → DRE explicado em linguagem humana
+5. **Catálogo & Loja:** produtos com estoque (serviços têm agenda/capacidade, não estoque); comércio conversacional — botão "Pedir pelo WhatsApp" ou pelo chat do Quintalzim; Recepcionista conhece o catálogo. Checkout online = Fase 2. Integração prioritária: catálogo WhatsApp Business; Meta Commerce depois (validar APIs antes de prometer)
+
+Briefing empresarial diário (7h: agenda, vendas de ontem, dica de post) em todos os pacotes Empresa. Argumento de venda do Completo: substitui site+social media+secretária+gestão+contador (R$ 800–1.500/mês separado).
+
+### Marketplace (dois modos, um guarda-chuva)
+- **Perfis fixos:** estreia com personal trainers no vertical fitness (demanda já existe via quiz). IA recomenda no momento certo do plano de hábitos. Profissional evolui de "item do catálogo" para cliente Empresa
+- **Balcão de Demandas:** pedido pontual em linguagem natural → IA estrutura (o quê, onde, quando, valor oferecido) → transmite por categoria+raio → interessados → escolha por perfil/avaliação
+- **Proteções:** verificação de cadastro (doc+selfie; categorias sensíveis exigem comprovação, ex. CREF), avaliação mútua real, recomendação por critério transparente, somos ponte não empregador. **Ativação por densidade:** cidade a cidade, categoria a categoria (entregas primeiro), nunca aberto geral
+- **Conexão direta com o Plano B (seção 10.3):** todo cliente final que se cadastra pra agendar um corte na barbearia já é, no mesmo login, um usuário em potencial do marketplace inteiro (personal trainer, outros negócios locais) — é o mecanismo natural de aquisição orgânica pro super-app, sem custo de mídia
+
+### Concierge (transversal, papel muda por modelo — ver seção 10)
+No modelo B2C, o Prontim é o concierge do próprio Quintalzim, falando com o assinante PF. No modelo B2B2C, o "Recepcionista IA" é uma instância do mesmo motor operando **em nome da Empresa**, no canal que o cliente final dela já usa. Quiz = mesmo motor em formato visual.
+
+---
+
+## 4. PAGAMENTOS
+
+- **MVP:** assinaturas via Asaas (Pix recorrente/cartão/boleto). Pagamentos cliente-final↔negócio ficam FORA da plataforma
+- **Fase 2:** split na origem via gateway (subcontas Asaas via API). NUNCA intermediar dinheiro (imposto só sobre comissão, sem risco regulatório). Comissão 2-3% negócios / 5-8% perfis / 8-12% demandas
+- **Custo de mensageria WhatsApp (novo, ver seção 10.4):** absorvido internamente nos planos Empresa, nunca cobrado à parte do assinante
+
+---
+
+## 5. STACK E ARQUITETURA
+
+| Camada | Ferramenta | Status |
+|---|---|---|
+| Frontend/portal | Next.js + PWA via Claude Code | ✅ Em produção (auth, SSO, landing) |
+| Backend | Supabase | ✅ Em uso (auth do portal e do Quintal de Finanças) |
+| Automações | n8n self-hosted | ✅ Rodando |
+| WhatsApp — número do Quintalzim (B2C) | Evolution API (Baileys), self-hosted | ✅ Rodando, número reativado |
+| WhatsApp — números de cada Empresa (B2B2C) | Meta WhatsApp Business Platform (Cloud API) via programa **Tech Provider + Embedded Signup v4**, com **Coexistence** para preservar o app/número já usado pelo dono | A construir (ver seção 10) |
+| IA | API Anthropic: Haiku (volume), Sonnet (concierge/visão) | ✅ Key ativa |
+| Pagamentos | Asaas | A criar conta |
+| Métricas | PostHog | A configurar |
+| Vitrines | Next.js multi-tenant (1 código, N clientes) | A construir |
+
+**Decisões técnicas tomadas:**
+- Imagem Docker da Evolution: `evoapicloud/evolution-api` (o repo `atendai/` foi descontinuado). Fixar versão, não usar :latest
+- Caddy para HTTPS automático (não Nginx/Certbot)
+- **WhatsApp tem dois caminhos, por modelo de negócio, não é mais "um ou outro" genérico:**
+  - Número do Quintalzim (Prontim, B2C): Evolution/Baileys continua válido — é o Quintalzim falando com o próprio assinante, risco de banimento é aceitável e sob nosso controle, aquecimento obrigatório de 3-7 dias em caso de troca de chip
+  - Números das Empresas (Recepcionista, B2B2C): **sempre API oficial via Embedded Signup + Coexistence**, nunca Baileys — porque não é o Quintalzim quem "é dono" da relação de confiança com o cliente final, é a Empresa, e não podemos arriscar o número dela sendo banido
+  - **Coexistence só ativa em cima de um número que já está no WhatsApp Business App** (não o WhatsApp comum). Onboarding da Empresa precisa checar isso primeiro e orientar a migração gratuita se necessário (ver seção 10.2)
+  - **Embedded Signup: construir direto na v4** — a v2 será descontinuada em 15/out/2026
+- Aquecimento de chip obrigatório (só se aplica ao número do Quintalzim/Baileys): usar como humano 3-7 dias antes de conectar; responder > iniciar; nunca disparar frio
+
+---
+
+## 6. INFRAESTRUTURA ATUAL (o que existe e funciona)
+
+- **VPS:** Hostinger KVM 1, Ubuntu 24.04, IP **195.200.5.79**, hostname srv1841198. Firewall UFW: 22/80/443. Docker + Gerenciador Docker + detector de malware ativos
+- **Projeto na VPS:** `/opt/quintalzim` — docker-compose.yml com 5 serviços rodando: caddy, postgres:16 (bancos: n8n, evolution), redis:7, n8n, evolution v2.3.7. Segredos em `.env` (N8N_ENCRYPTION_KEY, EVOLUTION_API_KEY, POSTGRES_PASSWORD) — valores no gerenciador de senhas do fundador, NUNCA neste documento
+- **DNS (Cloudflare, plano Free, nameservers delegados pelo registro.br):** A records para @, www, n8n, evo → 195.200.5.79, todos DNS only (nuvem cinza). HTTPS emitido e funcionando
+- **n8n:** https://n8n.quintalzim.com.br — conta admin criada; licença gratuita de recursos avançados solicitada
+- **Evolution:** https://evo.quintalzim.com.br (manager em /manager, login com a API key)
+- **Workflow existente:** "Prontim - Atendimento" (publicado): Webhook POST /webhook/prontim → Anthropic "Message a model" (claude-haiku-4-5, role System com personalidade do Prontim + role User com `{{ $json.body.data.message.conversation }}`) → HTTP Request POST http://evolution:8080/message/sendText/prontim (header apikey; body "Using Fields Below": number = `{{ $('Webhook').item.json.body.data.key.remoteJid }}`, text = `{{ $json.content[0].text }}`)
+- **Número do Prontim reativado** (banimento anterior resolvido), instância `Prontim` conectada ("Connected") na Evolution, fluxo "Prontim - Atendimento" revalidado via curl e **republicado em produção**. Dois bugs corrigidos nessa revalidação: (a) o HTTP Request de envio apontava pra instância `prontim` minúsculo, mas o nome real é `Prontim` (case-sensitive) → 404; (b) o teste inicial usava o número placeholder do exemplo de curl (`5535999999999`), que não existe de verdade no WhatsApp → 400 "exists: false". **Falta validar recebendo mensagem real de um número de WhatsApp de verdade** (mandar mensagem pro número do Quintalzim a partir de um celular, não só via curl simulado) e conferir no manager da Evolution se o webhook do evento de mensagem recebida está de fato configurado apontando pra `https://n8n.quintalzim.com.br/webhook/prontim`
+- **Portal Quintalzim:** Next.js em produção — auth Supabase completa (login, cadastro, magic link, reset), SSO com Quintal de Finanças funcionando, ícone/favicon atualizados pro Q ornamentado, seções `/app/prontim`, `/app/catalogo`, `/app/perfil`, `/app/inicio` no ar (a maior parte ainda como placeholder "Em breve")
+- **Quintal de Finanças:** app em produção, vários bugs de UI corrigidos nesta fase (modal de cartão, exclusão de despesa recorrente, ícones)
+
+**Comando de teste padrão (simula mensagem chegando):**
+```bash
+curl -X POST https://n8n.quintalzim.com.br/webhook/prontim \
+  -H "Content-Type: application/json" \
+  -d '{"data": {"key": {"remoteJid": "5535999999999@s.whatsapp.net"}, "message": {"conversation": "TEXTO_DE_TESTE"}}}'
+```
+
+**Lições aprendidas nesta fase:** (a) JSON body em nós HTTP do n8n deve usar "Using Fields Below", nunca JSON manual com expressões (quebra com \n e aspas da resposta da IA); (b) docker compose só funciona dentro de /opt/quintalzim; (c) chip novo conectado à Evolution sem aquecimento = banimento; (d) o ambiente de desenvolvimento (sandbox do Claude) não tem saída de rede pro VPS — testes de curl precisam ser rodados localmente/na própria VPS.
+
+---
+
+## 7. PENDÊNCIAS E BLOQUEIOS ATUAIS
+
+1. ~~WhatsApp banido~~ — **resolvido, número reativado.** ~~Revalidar o fluxo "Prontim - Atendimento" ponta a ponta~~ — **feito:** fluxo corrigido (instância `Prontim` com nome divergente causava 404; corpo de teste usava número placeholder inexistente) e republicado. Falta validar recebendo mensagem real via WhatsApp (não só via curl), ver seção 6
+2. Registro de marca INPI (classes 35, 38, 42) — verificar e protocolar
+3. ~~Reservar @quintalzim no Instagram~~ — **feito.** Facebook e Instagram do Quintalzim já criados
+4. ~~Validação de campo: 5 conversas com donos de negócio na cidade-piloto~~ — **feito**, 5 conversas realizadas. Falta registrar aqui os aprendizados dessas conversas (reação ao pedido de conectar WhatsApp vs. preferência pelo Plano B, objeções, interesse) — **anotar assim que houver retorno pra não perder o insight**
+5. Conta Asaas + Supabase + PostHog a criar
+6. **Novo:** cadastro do Quintalzim como Tech Provider na Meta (Business Verification + App Review + Access Verification) — processo leva dias/semanas, quanto antes começar melhor, é o que destrava escala de 10 pra 200 onboardings de Empresa por semana
+7. **Novo:** acompanhar publicação das tarifas de mensagem de serviço da Meta (prometida até 1/set/2026, cobrança entra em vigor em 1/out/2026) e atualizar a planilha de custo por assinante Empresa quando sair
+
+---
+
+## 8. ROADMAP
+
+**MVP (90 dias):**
+- Mês 1: portal base (PWA, login, assinatura) ✅ + concierge (placeholder, falta ligar no n8n) + calorias por foto (não iniciado) + finanças integradas ✅
+- Mês 2: Vitrine + Recepcionista (com decisão de canal por Empresa — Coexistence ou Plano B) + posts + Briefings; beta fechado 10-20 usuários locais
+- Mês 3: Quiz-Funil + gestão/DRE + utilitários + lançamento pago local
+
+**Fase 2 (condicionada a base ativa):** split de pagamentos + clube de assinaturas; marketplace fitness (~100-200 assinantes/cidade); Balcão de Demandas (entregas primeiro); integrações Meta + checkout; criadores externos; API oficial WhatsApp para produção em escala (200+ onboardings/semana, pós Business Verification)
+
+**Fase 3+:** hub modular pleno (cliente monta assinatura); expansão cidade a cidade; novos verticais
+
+**Próximos passos imediatos de desenvolvimento (ordem sugerida):**
+1. Revalidar o fluxo "Prontim - Atendimento" no n8n (número já reativado)
+2. Extrator de despesas (texto → JSON → API de finanças existente) — testável via curl
+3. Memória de conversa do Prontim (Redis/Postgres no fluxo) — pré-requisito da Recepcionista
+4. Wizard de onboarding de WhatsApp da Empresa dentro do portal (seção 10.2), com checagem de WhatsApp Business e fallback pro Plano B
+5. Cadastro do Quintalzim como Tech Provider na Meta (processo demorado, iniciar em paralelo)
+
+---
+
+## 9. COMO USAR ESTE DOCUMENTO
+
+Em novas conversas, este contexto substitui explicações. Convenções ao trabalhar no projeto:
+- Classificar novos insights em: (a) público, (b) camada/pacote, (c) o que reaproveita vs. o que é novo na arquitetura
+- Nunca colocar segredos/senhas neste documento — apenas referências ao gerenciador de senhas
+- Comunicação da marca: sempre resultado, nunca tecnologia; tom Prontim
+- Decisões de negócio já tomadas (escada de preços, split, curadoria, densidade do marketplace) não se rediscutem do zero — evoluem
+- **Ao desenhar qualquer fluxo de comunicação, primeiro perguntar: isso é B2C direto ou B2B2C? A resposta muda o canal, o número e quem é o "dono" da conversa (ver seção 10)**
+
+---
+
+## 10. MODELOS DE NEGÓCIO E CANAIS DE COMUNICAÇÃO
+
+Esta seção existe porque, na prática, o Quintalzim opera dois modelos de negócio diferentes sob a mesma marca, e confundi-los gera desenho de produto errado.
+
+### 10.1 Os dois modelos
+
+**B2C direto (assinante Pessoa Física):** o assinante fala diretamente com o Quintalzim. O Prontim é o concierge *do Quintalzim*, atendendo *o próprio cliente do Quintalzim*. Canal: chat dentro do app/PWA (principal) e/ou número de WhatsApp do Quintalzim (conveniência). Aqui não existe ambiguidade de "de quem é a conversa" — é sempre do Quintalzim.
+
+**B2B2C (assinante Empresa, ex. barbearia, academia):** o Quintalzim vende para a Empresa (B2B), mas quem usa o Recepcionista IA no dia a dia é o **cliente final da Empresa** — alguém que não é assinante do Quintalzim, não conhece a marca, e só confia no negócio que já frequenta. Regra inegociável: **a comunicação com o cliente final tem que acontecer onde ele já está e já confia** — nunca pedir pra ele "descobrir" o Quintalzim pra marcar um corte de cabelo.
+
+### 10.2 Caminho principal do B2B2C: WhatsApp da própria Empresa (Coexistence)
+
+O Recepcionista IA responde a partir do número que a Empresa já usa e que os clientes dela já têm salvo. Tecnicamente, via **Coexistence** (recurso da Meta desde mai/2025): o mesmo número fica ativo ao mesmo tempo no WhatsApp Business App (o dono continua podendo responder manualmente pelo celular) e na Cloud API (de onde o Recepcionista responde). Nada se perde — nem número, nem histórico.
+
+Pré-requisito técnico: o número precisa estar no **WhatsApp Business App** (grátis, oficial, diferente do WhatsApp comum). Quem ainda usa o WhatsApp normal migra primeiro — leva minutos, mantém histórico. Isso precisa ser o primeiro passo checado no onboarding.
+
+Ativação, na prática: via **Embedded Signup** (Meta Tech Provider), um wizard dentro do próprio Quintalzim guia o dono: (1) explica em linguagem simples o que vai acontecer, (2) checa se já tem WhatsApp Business — se não, orienta a migração, (3) botão único abre o popup oficial da Meta (facebook.com, o dono nunca digita senha dentro do site do Quintalzim), (4) confirma código de verificação, (5) tela de sucesso. Toda a parte técnica (criar WABA, registrar número, configurar webhook) roda automática via API no backend — o dono só faz login + aceitar permissões + confirmar código.
+
+Onboarding assistido, não deixar o dono sozinho num popup técnico: no início (fase de validação de campo), essa ativação deveria ser feita *junto* com o time do Quintalzim (ligação, WhatsApp, ou presencial), no tom "vizinho competente" da marca.
+
+### 10.3 Plano B: cliente final vira usuário do Quintalzim (sem depender do WhatsApp da Empresa)
+
+Pra donos resistentes a mexer no número que já usam (medo de custo, de "quebrar" algo, ou simplesmente não querer passar pelo fluxo da Meta), existe uma alternativa que não é só um substituto — é estrategicamente valiosa por si só:
+
+**Mecânica:** a Empresa recebe um link/QR code próprio (ex. `quintalzim.com.br/b/nome-da-empresa`) pra compartilhar com os clientes dela (balcão, Instagram, WhatsApp Status). O cliente final acessa, faz um cadastro simples (nome, telefone, e-mail — sem senha complexa, pode ser magic link/OTP), e vira um usuário do Quintalzim. Daí em diante, a comunicação acontece dentro do ecossistema: **push notification do PWA** (confirmação, lembrete 24h/2h antes) e **chat web** pra tirar dúvida ou marcar horário.
+
+**Por que isso é mais que um fallback:**
+- Zero fricção técnica pro dono — não migra WhatsApp, não autoriza nada na Meta
+- Lembretes e confirmações via push são **gratuitos pra sempre**, não dependem da Meta e não são afetados pela mudança de outubro/2026 (seção 10.4)
+- Gera aquisição orgânica de assinantes PF: o cliente da barbearia que se cadastra já está dentro do app — é um lead quente pro resto do catálogo (finanças, calorias, etc.), sem custo de mídia
+- Alimenta o Marketplace desde o primeiro dia: mesmo login que agenda corte pode descobrir o personal trainer recomendado pelo Prontim — é literalmente a visão de "super-app local" já documentada na seção 3
+- Constrói a base de CRM do Quintalzim, em vez desses relacionamentos ficarem presos dentro do WhatsApp de cada negócio individual
+
+**Trade-offs a ter em mente:**
+- Fricção maior pro cliente *final* (precisa se cadastrar em algo novo, em vez de só mandar mensagem no WhatsApp que ele já usa todo dia) — taxa de adoção tende a ser menor que a do Coexistence, que é invisível pra ele
+- Push web (PWA) no iOS exige iOS 16.4+ **e** o PWA instalado na tela de início — não é automático como no Android; uma fatia de usuários iOS pode não receber push se não instalar corretamente. Vale tratar isso explicitamente no onboarding do cliente final (orientar a "adicionar à tela de início")
+- Depende de quão bem a própria Empresa divulga o link pros clientes dela
+
+**Recomendação:** não tratar como "ou isso ou aquilo" — oferecer os dois caminhos em paralelo. Coexistence é o caminho de menor fricção pro cliente final e deveria ser o padrão sugerido; o Plano B é a opção pra quem tem resistência ao WhatsApp *e*, ao mesmo tempo, é uma alavanca estratégica de aquisição que vale incentivar mesmo pra quem já tem Coexistence ativo (ex.: oferecer o cadastro no app como complemento, não substituto).
+
+### 10.4 Custo: o que muda em outubro/2026
+
+A Meta anunciou que a partir de **1º de outubro de 2026** passa a cobrar por mensagens de serviço (respostas dentro da janela de 24h) — hoje gratuitas e ilimitadas desde nov/2024. Valores exatos por região prometidos até 1/set/2026. Isso vale só pro caminho oficial (Coexistence/Cloud API); não afeta o Plano B (push é sempre gratuito) nem o número Baileys do Prontim B2C (não passa pela Meta, mas carrega risco de banimento — trade-off já conhecido).
+
+Mensagens por iniciativa do negócio (lembrete de horário, campanha) sempre foram pagas, mesmo antes dessa mudança — isso não é novo.
+
+**Regra prática até lá:** manter o Recepcionista estritamente reativo (só responde quem chama primeiro) pra ficar dentro da janela de serviço gratuita enquanto durar. A partir de outubro, o custo por conversa (estimativa de referência: poucos centavos de dólar, por comparação com outros produtos de conversa da Meta) entra na conta interna do Quintalzim e é absorvido na mensalidade Empresa — nunca cobrado à parte do assinante.
+
+### 10.5 Resumo — quem fala com quem, em qual canal
+
+| Conversa | Modelo | Canal/Número |
+|---|---|---|
+| Assinante PF ↔ Prontim | B2C direto | Chat no app/PWA, ou número do Quintalzim no WhatsApp |
+| Dono da Empresa ↔ Quintalzim (configurar, ver vendas, dashboard) | B2B | Dentro do app/PWA — não precisa de WhatsApp |
+| Cliente final ↔ Recepcionista IA (caminho principal) | B2B2C | Número **da própria Empresa**, via Coexistence |
+| Cliente final ↔ Recepcionista IA (Plano B) | B2B2C | Chat web/push do **Quintalzim**, após cadastro próprio |
