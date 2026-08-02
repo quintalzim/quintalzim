@@ -1,6 +1,7 @@
 import BotaoSairQuintal from "@/components/app/BotaoSairQuintal";
 import FormularioAlterarSenha from "@/components/app/FormularioAlterarSenha";
 import FormularioEditarNome from "@/components/app/FormularioEditarNome";
+import FormularioEditarTelefone from "@/components/app/FormularioEditarTelefone";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
 import { createClient } from "@/lib/supabase/server";
@@ -12,6 +13,16 @@ export default async function PerfilPage() {
   } = await supabase.auth.getUser();
 
   const nome = (user?.user_metadata?.name as string | undefined)?.trim() || "";
+
+  let telefone = "";
+  if (user) {
+    const { data: perfil } = await supabase
+      .from("profiles")
+      .select("phone")
+      .eq("id", user.id)
+      .single();
+    telefone = perfil?.phone ?? "";
+  }
 
   return (
     <div className="mx-auto flex max-w-md flex-col gap-5">
@@ -27,6 +38,14 @@ export default async function PerfilPage() {
           <p className="text-lg font-bold text-tinta">{user?.email}</p>
         </div>
         <FormularioEditarNome nomeAtual={nome} />
+      </Card>
+
+      <Card className="flex flex-col gap-3">
+        <Selo variante="verde">Prontim no WhatsApp</Selo>
+        <p className="text-sm text-tinta-suave">
+          Vincule seu número pra registrar despesas conversando com o Prontim.
+        </p>
+        <FormularioEditarTelefone telefoneAtual={telefone} />
       </Card>
 
       <Card className="flex flex-col gap-3">

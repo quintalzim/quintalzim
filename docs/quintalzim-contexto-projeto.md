@@ -1,10 +1,12 @@
 # QUINTALZIM — Documento de Contexto do Projeto
 
-*Versão 1.2 — agosto/2026. Este documento dá contexto completo a qualquer nova conversa. Atualizar ao fim de sessões que mudem decisões, arquitetura ou estado.*
+*Versão 1.3 — agosto/2026. Este documento dá contexto completo a qualquer nova conversa. Atualizar ao fim de sessões que mudem decisões, arquitetura ou estado.*
 
 *Mudanças da v1.1: separação formal dos dois modelos de negócio (B2C direto e B2B2C), arquitetura de WhatsApp definida (número próprio do Quintalzim vs número de cada Empresa via Coexistence/Embedded Signup), "Plano B" de onboarding sem WhatsApp (cadastro direto no ecossistema via PWA), e mudança de precificação da Meta anunciada para 1/out/2026.*
 
 *Mudanças da v1.2: fluxo "Prontim - Atendimento" revalidado, corrigido e republicado; Facebook e Instagram do Quintalzim já reservados; as 5 conversas de validação de campo com donos de negócio já foram realizadas (aprendizados a registrar).*
+
+*Mudanças da v1.3: "Prontim - Extrator de Despesas" construído, testado ponta a ponta com escrita real no Supabase e publicado como sub-workflow do "Prontim - Atendimento" (chamado via Execute Sub-workflow); migração da Coexistence segue pendente de aprovação da Meta (Tech Provider em análise); registrado o gap de mapeamento telefone→user_id e o débito técnico de credenciais hardcoded no n8n.*
 
 ---
 
@@ -108,11 +110,13 @@ No modelo B2C, o Prontim é o concierge do próprio Quintalzim, falando com o as
 **Decisões técnicas tomadas:**
 - Imagem Docker da Evolution: `evoapicloud/evolution-api` (o repo `atendai/` foi descontinuado). Fixar versão, não usar :latest
 - Caddy para HTTPS automático (não Nginx/Certbot)
-- **WhatsApp tem dois caminhos, por modelo de negócio, não é mais "um ou outro" genérico:**
-  - Número do Quintalzim (Prontim, B2C): Evolution/Baileys continua válido — é o Quintalzim falando com o próprio assinante, risco de banimento é aceitável e sob nosso controle, aquecimento obrigatório de 3-7 dias em caso de troca de chip
-  - Números das Empresas (Recepcionista, B2B2C): **sempre API oficial via Embedded Signup + Coexistence**, nunca Baileys — porque não é o Quintalzim quem "é dono" da relação de confiança com o cliente final, é a Empresa, e não podemos arriscar o número dela sendo banido
-  - **Coexistence só ativa em cima de um número que já está no WhatsApp Business App** (não o WhatsApp comum). Onboarding da Empresa precisa checar isso primeiro e orientar a migração gratuita se necessário (ver seção 10.2)
+- **WhatsApp: decisão revisada — os dois números (Prontim/B2C e os das Empresas/B2B2C) vão pra API oficial, nenhum fica no Baileys.** Motivo concreto: número do Prontim reativado esbarrou no erro 463 da própria WhatsApp ("reach-out time-lock", limite anti-abuso pra contato sem histórico — comum em clientes não-oficiais tipo Baileys) logo na primeira mensagem real depois da reativação, mesmo já aquecido manualmente. Isso confirma que Baileys não é confiável o bastante nem pro uso interno do Quintalzim, não só pros clientes Empresa
+  - **Caminho técnico recomendado:** manter a Evolution API como camada (n8n continua chamando os mesmos endpoints REST), só trocar o **tipo de integração da instância** de `WHATSAPP-BAILEYS` pra `WHATSAPP-BUSINESS` (Cloud API oficial por trás). Isso evita reescrever os workflows do zero
+  - Números das Empresas (Recepcionista, B2B2C): API oficial via **Embedded Signup + Coexistence**, preservando o número/app que a Empresa já usa (ver seção 10.2)
+  - Número do Prontim (B2C): mesma migração pra Cloud API, também via Coexistence (preserva o app pra uso manual/monitoramento do time)
+  - **Coexistence só ativa em cima de um número que já está no WhatsApp Business App** (não o WhatsApp comum) — o número do Prontim já está nessa condição
   - **Embedded Signup: construir direto na v4** — a v2 será descontinuada em 15/out/2026
+  - Migrar o número do Prontim não precisa do fluxo completo de Tech Provider (isso só é necessário pra onboardar números de OUTRAS empresas); pro próprio número do Quintalzim basta o cadastro direto de app + WhatsApp Business Platform no Meta Business Manager
 - Aquecimento de chip obrigatório (só se aplica ao número do Quintalzim/Baileys): usar como humano 3-7 dias antes de conectar; responder > iniciar; nunca disparar frio
 
 ---
@@ -126,6 +130,8 @@ No modelo B2C, o Prontim é o concierge do próprio Quintalzim, falando com o as
 - **Evolution:** https://evo.quintalzim.com.br (manager em /manager, login com a API key)
 - **Workflow existente:** "Prontim - Atendimento" (publicado): Webhook POST /webhook/prontim → Anthropic "Message a model" (claude-haiku-4-5, role System com personalidade do Prontim + role User com `{{ $json.body.data.message.conversation }}`) → HTTP Request POST http://evolution:8080/message/sendText/prontim (header apikey; body "Using Fields Below": number = `{{ $('Webhook').item.json.body.data.key.remoteJid }}`, text = `{{ $json.content[0].text }}`)
 - **Número do Prontim reativado** (banimento anterior resolvido), instância `Prontim` conectada ("Connected") na Evolution, fluxo "Prontim - Atendimento" revalidado via curl e **republicado em produção**. Dois bugs corrigidos nessa revalidação: (a) o HTTP Request de envio apontava pra instância `prontim` minúsculo, mas o nome real é `Prontim` (case-sensitive) → 404; (b) o teste inicial usava o número placeholder do exemplo de curl (`5535999999999`), que não existe de verdade no WhatsApp → 400 "exists: false". **Falta validar recebendo mensagem real de um número de WhatsApp de verdade** (mandar mensagem pro número do Quintalzim a partir de um celular, não só via curl simulado) e conferir no manager da Evolution se o webhook do evento de mensagem recebida está de fato configurado apontando pra `https://n8n.quintalzim.com.br/webhook/prontim`
+- **"Prontim - Extrator de Despesas" construído e publicado** (workflow separado, chamado como sub-workflow do "Prontim - Atendimento" via node Execute Sub-workflow "Chamar Extrator"): recebe `mensagem`+`remoteJid` → busca categorias do assinante no Supabase → Claude Haiku extrai `{title, amount, type, category, date}` (ou `{erro:"nao_entendi"}` se a mensagem não for uma despesa/receita) → se reconheceu, grava em `transactions` e confirma "Prontim ✅ Registrei: ..." pelo WhatsApp; se não reconheceu, o "Prontim - Atendimento" cai no fluxo de conversa normal (Claude responde livre). Testado ponta a ponta com execução real (não simulada): mensagem de teste "gastei 1 real em teste" gerou linha real na tabela `transactions` do fundador e confirmação enviada sem erro 463. **Gap conhecido:** hoje o `user_id` gravado é hardcoded pro fundador (não existe ainda mapeamento telefone→user_id) — bloqueia abrir o Prontim pra outros assinantes PF além dele; ver pendência na seção 7
+- **Suporte a áudio no Prontim (transcrição via Groq Whisper), construído e publicado:** o "Prontim - Atendimento" agora detecta `messageType` do webhook da Evolution — se for `audioMessage`, baixa o áudio real (decriptado) via `POST /chat/getBase64FromMediaMessage/Prontim`, converte o base64 pra binário e transcreve com a **Groq API** (modelo `whisper-large-v3-turbo`, tier gratuito, sem custo no volume atual); se for texto normal, segue como antes. Os dois caminhos convergem num node único ("Mensagem Normalizada") antes de seguir pro Extrator de Despesas e pro fallback conversacional — ambos agora entendem tanto texto quanto áudio. Testado ponta a ponta com um áudio real do fundador ("Gastei 15 reais... Supermercado") → extraiu, gravou no Supabase e confirmou no WhatsApp corretamente. Credencial da Groq salva como credencial nativa do n8n (`Groq API`, tipo Header Auth), não hardcoded. **Lição aprendida:** o conector n8n usado (MCP) tem um bug ao criar duas conexões de saídas diferentes (`sourceOutput` 0 e 1) do mesmo node IF em chamadas separadas — sempre colapsa as duas no mesmo índice. Workaround: usar dois nodes IF paralelos (cada um só com sua própria saída verdadeira conectada) em vez de um IF só com dois ramos conectados
 - **Portal Quintalzim:** Next.js em produção — auth Supabase completa (login, cadastro, magic link, reset), SSO com Quintal de Finanças funcionando, ícone/favicon atualizados pro Q ornamentado, seções `/app/prontim`, `/app/catalogo`, `/app/perfil`, `/app/inicio` no ar (a maior parte ainda como placeholder "Em breve")
 - **Quintal de Finanças:** app em produção, vários bugs de UI corrigidos nesta fase (modal de cartão, exclusão de despesa recorrente, ícones)
 
@@ -136,19 +142,22 @@ curl -X POST https://n8n.quintalzim.com.br/webhook/prontim \
   -d '{"data": {"key": {"remoteJid": "5535999999999@s.whatsapp.net"}, "message": {"conversation": "TEXTO_DE_TESTE"}}}'
 ```
 
-**Lições aprendidas nesta fase:** (a) JSON body em nós HTTP do n8n deve usar "Using Fields Below", nunca JSON manual com expressões (quebra com \n e aspas da resposta da IA); (b) docker compose só funciona dentro de /opt/quintalzim; (c) chip novo conectado à Evolution sem aquecimento = banimento; (d) o ambiente de desenvolvimento (sandbox do Claude) não tem saída de rede pro VPS — testes de curl precisam ser rodados localmente/na própria VPS.
+**Lições aprendidas nesta fase:** (a) JSON body em nós HTTP do n8n deve usar "Using Fields Below", nunca JSON manual com expressões (quebra com \n e aspas da resposta da IA); (b) docker compose só funciona dentro de /opt/quintalzim; (c) chip novo conectado à Evolution sem aquecimento = banimento; (d) o ambiente de desenvolvimento (sandbox do Claude) não tem saída de rede pro VPS — testes de curl precisam ser rodados localmente/na própria VPS; (e) **erro 463 (reach-out time-lock)** — mensagem de resposta real pro celular do fundador travou em `status: 0, messageStubParameters: ["463"]` no log da Evolution, mesmo após aquecimento manual. É limite anti-abuso do próprio WhatsApp pra contato sem histórico, bem documentado em issues do Baileys/Evolution API v2.3.7. **Decisão tomada:** migrar para API oficial (Cloud API) também no número do Prontim, não só nos das Empresas — ver seção 5
 
 ---
 
 ## 7. PENDÊNCIAS E BLOQUEIOS ATUAIS
 
-1. ~~WhatsApp banido~~ — **resolvido, número reativado.** ~~Revalidar o fluxo "Prontim - Atendimento" ponta a ponta~~ — **feito:** fluxo corrigido (instância `Prontim` com nome divergente causava 404; corpo de teste usava número placeholder inexistente) e republicado. Falta validar recebendo mensagem real via WhatsApp (não só via curl), ver seção 6
+1. ~~WhatsApp banido~~ — **resolvido, número reativado.** ~~Revalidar o fluxo "Prontim - Atendimento" ponta a ponta~~ — **feito:** fluxo corrigido (instância `Prontim` com nome divergente causava 404; corpo de teste usava número placeholder inexistente) e republicado. **Novo bloqueio encontrado:** erro 463 (reach-out time-lock) ao enviar pra número real — decisão tomada de migrar o número do Prontim pra API oficial (Cloud API), não só os das Empresas. Ver seção 5 pro plano técnico
 2. Registro de marca INPI (classes 35, 38, 42) — verificar e protocolar
 3. ~~Reservar @quintalzim no Instagram~~ — **feito.** Facebook e Instagram do Quintalzim já criados
 4. ~~Validação de campo: 5 conversas com donos de negócio na cidade-piloto~~ — **feito**, 5 conversas realizadas. Falta registrar aqui os aprendizados dessas conversas (reação ao pedido de conectar WhatsApp vs. preferência pelo Plano B, objeções, interesse) — **anotar assim que houver retorno pra não perder o insight**
 5. Conta Asaas + Supabase + PostHog a criar
-6. **Novo:** cadastro do Quintalzim como Tech Provider na Meta (Business Verification + App Review + Access Verification) — processo leva dias/semanas, quanto antes começar melhor, é o que destrava escala de 10 pra 200 onboardings de Empresa por semana
-7. **Novo:** acompanhar publicação das tarifas de mensagem de serviço da Meta (prometida até 1/set/2026, cobrança entra em vigor em 1/out/2026) e atualizar a planilha de custo por assinante Empresa quando sair
+6. Cadastro do Quintalzim como Tech Provider na Meta (Business Verification + App Review + Access Verification) — **em andamento**, Verificação da Empresa "em análise"; processo leva dias/semanas, é o que destrava escala de 10 pra 200 onboardings de Empresa por semana. Enquanto isso não sai, Coexistence pros números das Empresas fica bloqueado
+7. Acompanhar publicação das tarifas de mensagem de serviço da Meta (prometida até 1/set/2026, cobrança entra em vigor em 1/out/2026) e atualizar a planilha de custo por assinante Empresa quando sair
+8. ~~Extrator de despesas (Prontim)~~ — **feito e publicado.** Ver seção 6
+9. **Novo:** mapeamento telefone→`user_id` — hoje o Extrator de Despesas só funciona pro fundador (user_id hardcoded no workflow). Precisa de uma tabela/lógica que identifique o assinante pelo `remoteJid` do WhatsApp antes de abrir o Prontim pra qualquer PF além dele
+10. **Novo:** débito técnico — Authorization do Supabase e apikey da Evolution estão hardcoded direto nos nodes HTTP Request do n8n, em vez de usar credenciais nativas (já existe credencial `Supabase account` e `Header Auth account` cadastradas no n8n, só falta aplicar). Não bloqueia funcionamento, mas é risco de segurança se o workflow for exportado/compartilhado
 
 ---
 
@@ -164,11 +173,12 @@ curl -X POST https://n8n.quintalzim.com.br/webhook/prontim \
 **Fase 3+:** hub modular pleno (cliente monta assinatura); expansão cidade a cidade; novos verticais
 
 **Próximos passos imediatos de desenvolvimento (ordem sugerida):**
-1. Revalidar o fluxo "Prontim - Atendimento" no n8n (número já reativado)
-2. Extrator de despesas (texto → JSON → API de finanças existente) — testável via curl
-3. Memória de conversa do Prontim (Redis/Postgres no fluxo) — pré-requisito da Recepcionista
-4. Wizard de onboarding de WhatsApp da Empresa dentro do portal (seção 10.2), com checagem de WhatsApp Business e fallback pro Plano B
-5. Cadastro do Quintalzim como Tech Provider na Meta (processo demorado, iniciar em paralelo)
+1. ~~Revalidar o fluxo "Prontim - Atendimento" no n8n~~ — feito
+2. ~~Extrator de despesas (texto → JSON → API de finanças existente)~~ — feito, testado ponta a ponta e publicado
+3. Mapeamento telefone→user_id (pré-requisito pra abrir o Extrator/Prontim além do fundador)
+4. Memória de conversa do Prontim (Redis/Postgres no fluxo) — pré-requisito da Recepcionista
+5. Wizard de onboarding de WhatsApp da Empresa dentro do portal (seção 10.2), com checagem de WhatsApp Business e fallback pro Plano B
+6. Cadastro do Quintalzim como Tech Provider na Meta — em andamento (Verificação da Empresa em análise)
 
 ---
 
