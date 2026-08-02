@@ -1,3 +1,4 @@
+import Link from "next/link";
 import BotaoSairQuintal from "@/components/app/BotaoSairQuintal";
 import FormularioAlterarSenha from "@/components/app/FormularioAlterarSenha";
 import FormularioEditarNome from "@/components/app/FormularioEditarNome";
@@ -52,6 +53,20 @@ export default async function PerfilPage() {
         <Selo variante="verde">Segurança</Selo>
         <p className="text-sm text-tinta-suave">Escolhe uma senha nova pro teu cadeado.</p>
         <FormularioAlterarSenha />
+      </Card>
+
+      <Card className="flex flex-col gap-3">
+        <Selo variante="terracota">Tem um negócio?</Selo>
+        <p className="text-sm text-tinta-suave">
+          Cadastra tua Empresa no Quintalzim e prepara o Recepcionista pra atender no WhatsApp que
+          você já usa.
+        </p>
+        <Link
+          href="/app/empresa"
+          className="text-center font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+        >
+          Cadastrar minha Empresa →
+        </Link>
       </Card>
 
       <Card className="flex flex-col gap-2">
