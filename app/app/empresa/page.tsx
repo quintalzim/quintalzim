@@ -1,5 +1,6 @@
 import CardLinkEmpresa from "@/components/app/CardLinkEmpresa";
 import FormularioCriarEmpresa from "@/components/app/FormularioCriarEmpresa";
+import FormularioEditarVitrine from "@/components/app/FormularioEditarVitrine";
 import WizardWhatsAppEmpresa from "@/components/app/WizardWhatsAppEmpresa";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
@@ -41,13 +42,21 @@ export default async function EmpresaPage() {
 
       <CardLinkEmpresa slug={empresa.slug} />
 
+      <Card className="flex flex-col gap-3">
+        <Selo variante="verde">Vitrine</Selo>
+        <p className="text-sm text-tinta-suave">
+          O que aparece pra quem abre o teu link — preenche pra deixar mais completo.
+        </p>
+        <FormularioEditarVitrine empresaId={empresa.id} vitrineAtual={empresa} />
+      </Card>
+
       <WizardWhatsAppEmpresa empresa={empresa} />
 
       <Card className="flex flex-col gap-2">
         <Selo variante="terracota">Em breve</Selo>
-        <h2 className="text-lg font-bold text-tinta">Vitrine, Recepcionista e Catálogo</h2>
+        <h2 className="text-lg font-bold text-tinta">Recepcionista e Catálogo</h2>
         <p className="text-sm text-tinta-suave">
-          O resto do painel da Empresa (mini-site, agendamento e vendas) chega nas próximas etapas.
+          Agendamento automático e vendas pelo Quintalzim chegam nas próximas etapas.
         </p>
       </Card>
     </div>
