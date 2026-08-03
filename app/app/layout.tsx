@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import FinalizarCadastroClienteEmpresa from "@/components/app/FinalizarCadastroClienteEmpresa";
 import HeaderApp from "@/components/app/HeaderApp";
 import NavInferior from "@/components/app/NavInferior";
 import { createClient } from "@/lib/supabase/server";
@@ -22,6 +23,7 @@ export default async function AppLayout({
 
   return (
     <div className="flex min-h-screen flex-col bg-papel">
+      <FinalizarCadastroClienteEmpresa />
       <HeaderApp nome={primeiroNome} />
       <main className="flex-1 px-5 py-6 pb-24">{children}</main>
       <NavInferior />

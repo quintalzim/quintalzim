@@ -1,6 +1,6 @@
 # QUINTALZIM — Documento de Contexto do Projeto
 
-*Versão 1.6 — agosto/2026. Este documento dá contexto completo a qualquer nova conversa. Atualizar ao fim de sessões que mudem decisões, arquitetura ou estado.*
+*Versão 1.7 — agosto/2026. Este documento dá contexto completo a qualquer nova conversa. Atualizar ao fim de sessões que mudem decisões, arquitetura ou estado.*
 
 *Mudanças da v1.1: separação formal dos dois modelos de negócio (B2C direto e B2B2C), arquitetura de WhatsApp definida (número próprio do Quintalzim vs número de cada Empresa via Coexistence/Embedded Signup), "Plano B" de onboarding sem WhatsApp (cadastro direto no ecossistema via PWA), e mudança de precificação da Meta anunciada para 1/out/2026.*
 
@@ -13,6 +13,8 @@
 *Mudanças da v1.5: memória de conversa do Prontim implementada e publicada — o fallback conversacional do "Prontim - Atendimento" virou um AI Agent (Claude Haiku + Redis Chat Memory, sessão por `remoteJid`, TTL 24h, últimas 8 interações), usando o Redis que já rodava no docker-compose (`quintalzim-redis-1`, sem senha, alcançável como `redis:6379` na rede `quintalzim_qz`). No processo, corrigido um bug real (não relacionado à memória) no "Prontim - Extrator de Despesas": os dois nodes IF paralelos usados como workaround do bug de conexão dupla (ver seção 6) tinham uma saída "falsa" sem nenhuma conexão — isso fazia o Execute Sub-workflow do fluxo pai devolver, às vezes, o dado errado desse beco sem saída em vez do resultado real do node "Fim", deixando o Prontim mudo em mensagens que não eram despesa. Corrigido conectando as duas saídas soltas no "Fim", convergindo todo caminho possível num único ponto de saída.*
 
 *Mudanças da v1.6: criada a base de conta Empresa no portal — antes disso não existia nenhum conceito de Empresa no produto, só Pessoa Física. Nova tabela `empresas` no Supabase (dono, nome, slug, status do WhatsApp), rota `/app/empresa` (cadastro se não tem empresa ainda, painel se já tem) e o início do wizard de conexão de WhatsApp da Empresa (explicação + checagem de WhatsApp Business). O botão final de ativação via Meta fica desabilitado com aviso honesto, porque depende da aprovação do Quintalzim como Tech Provider (pendência 6, ainda em análise) — pronto pra ligar assim que sair.*
+
+*Mudanças da v1.7: implementado o Plano B (seção 10.3) — cliente final vira usuário do Quintalzim sem precisar do WhatsApp da Empresa. Página pública `/b/[slug]` (sem exigir login) mostra o nome do negócio e um formulário simples (nome, WhatsApp, e-mail); o cadastro usa magic link (mesma infra de auth que já existia em `/entrar`, sem senha). O painel da Empresa (`/app/empresa`) ganhou um card com o link pronto pra copiar e compartilhar. Nova tabela `empresa_clientes` guarda o vínculo cliente↔empresa, e o telefone informado também é aproveitado pra já deixar esse cliente pronto pra usar o Prontim (mesmo campo `profiles.phone` do mapeamento telefone→user_id). **Ainda não implementado nessa entrega:** as notificações push de verdade (confirmação, lembrete 24h/2h) — hoje o cadastro só guarda o vínculo e o contato; falta a infraestrutura de push do PWA (service worker, permissão do navegador, VAPID keys) pra essas mensagens saírem de fato.*
 
 ---
 
@@ -143,6 +145,7 @@ No modelo B2C, o Prontim é o concierge do próprio Quintalzim, falando com o as
 - **Portal Quintalzim:** Next.js em produção — auth Supabase completa (login, cadastro, magic link, reset), SSO com Quintal de Finanças funcionando, ícone/favicon atualizados pro Q ornamentado, seções `/app/prontim`, `/app/catalogo`, `/app/perfil`, `/app/inicio` no ar (a maior parte ainda como placeholder "Em breve")
 - **Quintal de Finanças:** app em produção, vários bugs de UI corrigidos nesta fase (modal de cartão, exclusão de despesa recorrente, ícones)
 - **Base de conta Empresa, construída (UI pronta, ativação real pendente da Meta):** tabela `empresas` no Supabase (`owner_id`, `nome`, `slug`, `whatsapp_status` — 1 empresa por dono por enquanto, RLS própria), script em `docs/sql/criar-tabela-empresas.sql`. Nova rota `/app/empresa` (`app/app/empresa/page.tsx`): sem empresa cadastrada mostra `FormularioCriarEmpresa`; com empresa mostra o painel + `WizardWhatsAppEmpresa`. O wizard (`components/app/WizardWhatsAppEmpresa.tsx`) tem hoje: explicação do que vai acontecer, pergunta se já usa WhatsApp Business (com orientação de migração se não), e um botão "Ativar via Meta" **desabilitado de propósito** com aviso de que depende da aprovação do Quintalzim como Tech Provider — nada de Embedded Signup real ainda, é só a casca do portal pronta pra plugar assim que a Meta liberar. Link de entrada adicionado como card no Perfil ("Tem um negócio?")
+- **Plano B (cliente final sem WhatsApp da Empresa), construído:** página pública `app/b/[slug]/page.tsx` (fora do layout autenticado, `empresas` ganhou política de leitura pública `empresas_select_public` pra isso funcionar) com `FormularioClienteFinal` (nome, WhatsApp, e-mail → `signInWithOtp`, reaproveitando a mesma infra de magic link de `/entrar`). O vínculo cliente↔empresa (tabela nova `empresa_clientes`) só é criado depois que o cliente confirma o e-mail — o formulário guarda os dados em `localStorage` (`lib/empresa-clientes.ts`) antes de disparar o magic link, e `components/app/FinalizarCadastroClienteEmpresa.tsx` (montado em `app/app/layout.tsx`, roda em toda página autenticada) lê esse pendente, grava o vínculo e preenche `profiles.phone` se ainda estiver vazio. Painel da Empresa ganhou `CardLinkEmpresa` com o link `/b/slug` pronto pra copiar. Script `docs/sql/plano-b-cliente-final.sql`. **Falta:** push notifications de verdade (só o vínculo/contato está pronto, não o envio de lembretes)
 
 **Comando de teste padrão (simula mensagem chegando):**
 ```bash
@@ -168,6 +171,7 @@ curl -X POST https://n8n.quintalzim.com.br/webhook/prontim \
 9. ~~Mapeamento telefone→user_id~~ — **feito e publicado.** Ver seção 6. Prontim/Extrator agora funcionam pra qualquer assinante que vincule o WhatsApp no Perfil, não só o fundador
 10. Débito técnico (parcial) — apikey da Evolution (WhatsApp) ainda está hardcoded nos nodes HTTP Request do n8n; os nodes de Supabase do Extrator já foram migrados pra credencial nativa. Falta aplicar o mesmo pro apikey da Evolution (existe credencial `Header Auth account` cadastrada, só falta usar). Não bloqueia funcionamento, é risco de segurança se o workflow for exportado/compartilhado
 11. ~~Memória de conversa do Prontim~~ — **feito e publicado.** Ver seção 6. Pré-requisito da Recepcionista cumprido
+12. Push notifications reais do PWA (service worker, permissão do navegador, VAPID keys) — necessário pro Plano B (seção 10.3) e pros Briefings realmente notificarem; hoje o cadastro do cliente final (`/b/slug`) só guarda o vínculo, não envia nada ainda
 
 ---
 
@@ -187,7 +191,7 @@ curl -X POST https://n8n.quintalzim.com.br/webhook/prontim \
 2. ~~Extrator de despesas (texto → JSON → API de finanças existente)~~ — feito, testado ponta a ponta e publicado
 3. ~~Mapeamento telefone→user_id~~ — feito, testado e publicado
 4. ~~Memória de conversa do Prontim (Redis no fluxo)~~ — feito, testado e publicado. Pré-requisito da Recepcionista cumprido
-5. Wizard de onboarding de WhatsApp da Empresa dentro do portal (seção 10.2) — **casca pronta:** conta Empresa + explicação + checagem de WhatsApp Business construídas; falta plugar o Embedded Signup real (bloqueado pela pendência 6) e o fallback pro Plano B
+5. Wizard de onboarding de WhatsApp da Empresa dentro do portal (seção 10.2) — **casca pronta:** conta Empresa + explicação + checagem de WhatsApp Business construídas; falta plugar o Embedded Signup real (bloqueado pela pendência 6). ~~fallback pro Plano B~~ — **feito** (cadastro do cliente final via link `/b/slug`); falta a camada de push notification de verdade
 6. Cadastro do Quintalzim como Tech Provider na Meta — em andamento (Verificação da Empresa em análise)
 
 ---

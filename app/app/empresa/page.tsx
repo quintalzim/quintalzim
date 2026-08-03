@@ -1,3 +1,4 @@
+import CardLinkEmpresa from "@/components/app/CardLinkEmpresa";
 import FormularioCriarEmpresa from "@/components/app/FormularioCriarEmpresa";
 import WizardWhatsAppEmpresa from "@/components/app/WizardWhatsAppEmpresa";
 import Card from "@/components/ui/Card";
@@ -37,6 +38,8 @@ export default async function EmpresaPage() {
         <h1 className="text-2xl font-extrabold text-tinta">{empresa.nome}</h1>
         <p className="text-tinta-suave">Painel da tua Empresa no Quintalzim.</p>
       </div>
+
+      <CardLinkEmpresa slug={empresa.slug} />
 
       <WizardWhatsAppEmpresa empresa={empresa} />
 
