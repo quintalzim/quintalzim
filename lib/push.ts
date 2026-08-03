@@ -57,7 +57,7 @@ export async function ativarNotificacoes(): Promise<{ ok: boolean; erro?: string
   if (!inscricao) {
     inscricao = await registro.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ParaUint8Array(chavePublica),
+      applicationServerKey: urlBase64ParaUint8Array(chavePublica) as BufferSource,
     });
   }
 
