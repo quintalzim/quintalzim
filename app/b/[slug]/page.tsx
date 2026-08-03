@@ -1,5 +1,6 @@
 import Link from "next/link";
 import FormularioClienteFinal from "@/components/public/FormularioClienteFinal";
+import FormularioSolicitarAgendamento from "@/components/public/FormularioSolicitarAgendamento";
 import Card from "@/components/ui/Card";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,7 +14,9 @@ export default async function VitrinePage({
 
   const { data: empresa } = await supabase
     .from("empresas")
-    .select("id, nome, slug, descricao, endereco, telefone_contato, instagram, horario_funcionamento")
+    .select(
+      "id, nome, slug, owner_id, descricao, endereco, telefone_contato, instagram, horario_funcionamento"
+    )
     .eq("slug", slug)
     .maybeSingle();
 
@@ -27,6 +30,10 @@ export default async function VitrinePage({
       </div>
     );
   }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const detalhes = [
     empresa.endereco ? { rotulo: "Endereço", valor: empresa.endereco } : null,
@@ -60,11 +67,26 @@ export default async function VitrinePage({
         )}
 
         <Card className="flex flex-col gap-3">
-          <p className="text-sm text-tinta-suave">
-            Deixa teu contato aqui que a gente te avisa e lembra dos teus horários — sem precisar
-            de senha nem app novo.
-          </p>
-          <FormularioClienteFinal empresaId={empresa.id} />
+          {user ? (
+            <>
+              <p className="text-sm text-tinta-suave">
+                Pede teu horário por aqui — a gente avisa {empresa.nome} na hora.
+              </p>
+              <FormularioSolicitarAgendamento
+                empresaId={empresa.id}
+                empresaNome={empresa.nome}
+                ownerId={empresa.owner_id}
+              />
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-tinta-suave">
+                Deixa teu contato aqui que a gente te avisa e lembra dos teus horários — sem
+                precisar de senha nem app novo.
+              </p>
+              <FormularioClienteFinal empresaId={empresa.id} />
+            </>
+          )}
         </Card>
       </div>
     </div>

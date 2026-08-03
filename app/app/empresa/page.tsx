@@ -1,6 +1,7 @@
 import CardLinkEmpresa from "@/components/app/CardLinkEmpresa";
 import FormularioCriarEmpresa from "@/components/app/FormularioCriarEmpresa";
 import FormularioEditarVitrine from "@/components/app/FormularioEditarVitrine";
+import PainelAgendamentos from "@/components/app/PainelAgendamentos";
 import WizardWhatsAppEmpresa from "@/components/app/WizardWhatsAppEmpresa";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
@@ -33,6 +34,12 @@ export default async function EmpresaPage() {
     );
   }
 
+  const { data: agendamentos } = await supabase
+    .from("agendamentos")
+    .select("id, cliente_profile_id, nome_cliente, telefone_cliente, servico, data_hora_desejada, observacao, status")
+    .eq("empresa_id", empresa.id)
+    .order("data_hora_desejada", { ascending: true });
+
   return (
     <div className="mx-auto flex max-w-md flex-col gap-5">
       <div>
@@ -41,6 +48,8 @@ export default async function EmpresaPage() {
       </div>
 
       <CardLinkEmpresa slug={empresa.slug} />
+
+      <PainelAgendamentos empresaNome={empresa.nome} agendamentosIniciais={agendamentos ?? []} />
 
       <Card className="flex flex-col gap-3">
         <Selo variante="verde">Vitrine</Selo>
@@ -54,10 +63,8 @@ export default async function EmpresaPage() {
 
       <Card className="flex flex-col gap-2">
         <Selo variante="terracota">Em breve</Selo>
-        <h2 className="text-lg font-bold text-tinta">Recepcionista e Catálogo</h2>
-        <p className="text-sm text-tinta-suave">
-          Agendamento automático e vendas pelo Quintalzim chegam nas próximas etapas.
-        </p>
+        <h2 className="text-lg font-bold text-tinta">Catálogo</h2>
+        <p className="text-sm text-tinta-suave">Vendas pelo Quintalzim chegam numa próxima etapa.</p>
       </Card>
     </div>
   );
