@@ -3,11 +3,17 @@
 import { FormEvent, useState } from "react";
 import Botao from "@/components/ui/Botao";
 import Campo from "@/components/ui/Campo";
-import { CHAVE_CADASTRO_PENDENTE, normalizarTelefoneCliente } from "@/lib/empresa-clientes";
+import { normalizarTelefoneCliente } from "@/lib/empresa-clientes";
 import { createClient } from "@/lib/supabase/client";
 import { mensagemErroAuth } from "@/lib/supabase/erros";
 
-export default function FormularioClienteFinal({ empresaId }: { empresaId: string }) {
+export default function FormularioClienteFinal({
+  empresaId,
+  slug,
+}: {
+  empresaId: string;
+  slug: string;
+}) {
   const supabase = createClient();
 
   const [nome, setNome] = useState("");
@@ -30,20 +36,15 @@ export default function FormularioClienteFinal({ empresaId }: { empresaId: strin
 
     setCarregando(true);
 
-    try {
-      window.localStorage.setItem(
-        CHAVE_CADASTRO_PENDENTE,
-        JSON.stringify({ empresaId, nome: nome.trim(), telefone: telefoneNormalizado })
-      );
-    } catch {
-      // localStorage indisponível (modo privado etc.) — segue sem bloquear o cadastro
-    }
-
+    // empresaId vai junto no e-mail só pra referência; quem cria o vínculo de
+    // verdade é o FinalizarVinculoCliente, rodando em /b/[slug] depois do login
+    // (o nome/telefone viajam no user_metadata pra sobreviver mesmo se o link
+    // for aberto em outro dispositivo/navegador).
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/app/inicio`,
-        data: { name: nome.trim() },
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/b/${slug}`,
+        data: { name: nome.trim(), phone: telefoneNormalizado, empresaId },
       },
     });
 
@@ -60,8 +61,8 @@ export default function FormularioClienteFinal({ empresaId }: { empresaId: strin
   if (enviado) {
     return (
       <p className="rounded-lg bg-verde/10 px-4 py-3 text-center text-sm font-semibold text-verde-escuro">
-        Mandamos um link pro teu e-mail. Clica nele pra confirmar — sem senha, sem enrolação.
-        Prontim ✅
+        Mandamos um link pro teu e-mail. Clica nele pra voltar direto pra cá — sem senha, sem
+        enrolação. Prontim ✅
       </p>
     );
   }

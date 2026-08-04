@@ -1,4 +1,5 @@
 import Link from "next/link";
+import FinalizarVinculoCliente from "@/components/public/FinalizarVinculoCliente";
 import FormularioClienteFinal from "@/components/public/FormularioClienteFinal";
 import FormularioSolicitarAgendamento from "@/components/public/FormularioSolicitarAgendamento";
 import Card from "@/components/ui/Card";
@@ -46,6 +47,7 @@ export default async function VitrinePage({
 
   return (
     <div className="flex flex-1 flex-col items-center bg-papel px-6 py-16">
+      {user && <FinalizarVinculoCliente empresaId={empresa.id} />}
       <div className="flex w-full max-w-sm flex-col gap-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <Link href="/" className="font-titulo text-sm font-semibold text-verde-escuro">
@@ -84,7 +86,7 @@ export default async function VitrinePage({
                 Deixa teu contato aqui que a gente te avisa e lembra dos teus horários — sem
                 precisar de senha nem app novo.
               </p>
-              <FormularioClienteFinal empresaId={empresa.id} />
+              <FormularioClienteFinal empresaId={empresa.id} slug={empresa.slug} />
             </>
           )}
         </Card>
