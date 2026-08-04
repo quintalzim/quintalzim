@@ -59,6 +59,7 @@ export default function PainelAgendamentos({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           profileId: agendamento.cliente_profile_id,
+          agendamentoId: agendamento.id,
           titulo:
             novoStatus === "confirmado"
               ? `${empresaNome} confirmou teu horário`
