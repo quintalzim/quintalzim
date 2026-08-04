@@ -26,6 +26,10 @@ export default async function PerfilPage() {
     telefone = perfil?.phone ?? "";
   }
 
+  const { data: empresa } = user
+    ? await supabase.from("empresas").select("nome, slug").eq("owner_id", user.id).maybeSingle()
+    : { data: null };
+
   return (
     <div className="mx-auto flex max-w-md flex-col gap-5">
       <div>
@@ -65,19 +69,32 @@ export default async function PerfilPage() {
         <AtivarNotificacoes />
       </Card>
 
-      <Card className="flex flex-col gap-3">
-        <Selo variante="terracota">Tem um negócio?</Selo>
-        <p className="text-sm text-tinta-suave">
-          Cadastra tua Empresa no Quintalzim e prepara o Recepcionista pra atender no WhatsApp que
-          você já usa.
-        </p>
-        <Link
-          href="/app/empresa"
-          className="text-center font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
-        >
-          Cadastrar minha Empresa →
-        </Link>
-      </Card>
+      {empresa ? (
+        <Card className="flex flex-col gap-3">
+          <Selo variante="verde">Minha Empresa</Selo>
+          <p className="text-lg font-bold text-tinta">{empresa.nome}</p>
+          <Link
+            href="/app/empresa"
+            className="text-center font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+          >
+            Gerenciar minha Empresa →
+          </Link>
+        </Card>
+      ) : (
+        <Card className="flex flex-col gap-3">
+          <Selo variante="terracota">Tem um negócio?</Selo>
+          <p className="text-sm text-tinta-suave">
+            Cadastra tua Empresa no Quintalzim e prepara o Recepcionista pra atender no WhatsApp que
+            você já usa.
+          </p>
+          <Link
+            href="/app/empresa"
+            className="text-center font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+          >
+            Cadastrar minha Empresa →
+          </Link>
+        </Card>
+      )}
 
       <Card className="flex flex-col gap-2">
         <Selo variante="terracota">Em breve</Selo>

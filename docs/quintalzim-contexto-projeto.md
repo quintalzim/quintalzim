@@ -32,6 +32,8 @@
 
 *Bug relacionado encontrado no mesmo teste: a notificação push de confirmação/recusa (`PainelAgendamentos` → `/api/push/enviar`) sempre falhava com 401 silencioso — o endpoint só autorizava push pra si mesmo (`user.id === profileId`, caso do botão de teste em `AtivarNotificacoes`) ou com o segredo de servidor, mas o painel da Empresa chama esse endpoint do navegador do DONO pra notificar o CLIENTE (`profileId` diferente), sem segredo. Corrigido: endpoint agora aceita `agendamentoId` no corpo e, com o client admin (ignora RLS), confere se quem está logado é dono da empresa daquele agendamento antes de autorizar. **Importante: confirmação de agendamento não é por e-mail, é só push do navegador** — o cliente só recebe se tiver clicado em "Ativar avisos no navegador" antes (`AtivarNotificacoes`, visível na tela restrita `PortalRestritoClienteFinal`).*
 
+*Bug encontrado em seguida (assinante Celso): `/app/perfil` sempre mostrava o card "Tem um negócio? Cadastrar minha Empresa", mesmo pra quem já tinha Empresa criada — o card era estático, nunca checava se já existia uma. Corrigido: `app/app/perfil/page.tsx` agora busca `empresas` do dono e mostra "Minha Empresa" (nome + link "Gerenciar") se já existe, ou o convite de cadastro original se não existe.*
+
 ---
 
 ## 1. O QUE É O QUINTALZIM
