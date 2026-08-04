@@ -1,12 +1,9 @@
+import Link from "next/link";
 import CardQuintalFinancas from "@/components/app/CardQuintalFinancas";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
 
-const emBreve = [
-  { titulo: "Calorias por Foto 📸", descricao: "Tira uma foto do prato e pronto." },
-  { titulo: "Briefings do Dia ☀️", descricao: "Um resumo rapidinho pra começar o dia." },
-  { titulo: "Prontim no WhatsApp 💬", descricao: "Seu Prontim direto no zap." },
-];
+const emBreve = [{ titulo: "Prontim no WhatsApp 💬", descricao: "Seu Prontim direto no zap." }];
 
 export default function CatalogoPage() {
   return (
@@ -18,6 +15,42 @@ export default function CatalogoPage() {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <CardQuintalFinancas />
+
+        <Card className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-tinta">Calorias por Foto 📸</h2>
+            <Selo variante="verde">Ativo</Selo>
+          </div>
+          <p className="text-sm text-tinta-suave">
+            Tira uma foto do prato e manda pro Prontim no WhatsApp — ele estima as calorias na
+            hora.
+          </p>
+        </Card>
+
+        <Card className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-tinta">Briefings do Dia ☀️</h2>
+            <Selo variante="verde">Ativo</Selo>
+          </div>
+          <p className="text-sm text-tinta-suave">
+            Todo dia de manhã, um resumo pronto: financeiro no Início, e da Empresa pra quem tem
+            negócio.
+          </p>
+          <div className="mt-1 flex gap-4">
+            <Link
+              href="/app/inicio"
+              className="font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+            >
+              Ver no Início →
+            </Link>
+            <Link
+              href="/app/empresa"
+              className="font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+            >
+              Ver na Empresa →
+            </Link>
+          </div>
+        </Card>
 
         {emBreve.map((item) => (
           <Card key={item.titulo} className="flex flex-col gap-2 opacity-70">
