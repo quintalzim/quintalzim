@@ -6,9 +6,9 @@ import { confirmarAcesso } from "./actions";
 export default async function ConfirmarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token_hash?: string; type?: string }>;
+  searchParams: Promise<{ token_hash?: string; type?: string; next?: string }>;
 }) {
-  const { token_hash: tokenHash, type } = await searchParams;
+  const { token_hash: tokenHash, type, next } = await searchParams;
 
   if (!tokenHash || !type) {
     redirect("/entrar?erro=link-invalido");
@@ -29,6 +29,7 @@ export default async function ConfirmarPage({
         <form action={confirmarAcesso} className="flex w-full flex-col gap-4">
           <input type="hidden" name="token_hash" value={tokenHash} />
           <input type="hidden" name="type" value={type} />
+          {next && <input type="hidden" name="next" value={next} />}
           <Botao type="submit" className="w-full">
             Continuar 🌱
           </Botao>

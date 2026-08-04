@@ -70,7 +70,7 @@ function EntrarConteudo() {
       password: senha,
       options: {
         data: { name: nome },
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/app/inicio`,
+        emailRedirectTo: `${window.location.origin}/app/inicio`,
       },
     });
 
@@ -98,7 +98,7 @@ function EntrarConteudo() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/app/inicio`,
+        emailRedirectTo: `${window.location.origin}/app/inicio`,
       },
     });
 

@@ -43,7 +43,7 @@ export default function FormularioClienteFinal({
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/b/${slug}`,
+        emailRedirectTo: `${window.location.origin}/b/${slug}`,
         data: { name: nome.trim(), phone: telefoneNormalizado, empresaId },
       },
     });

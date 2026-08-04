@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function confirmarAcesso(formData: FormData) {
   const tokenHash = formData.get("token_hash");
   const type = formData.get("type");
+  const next = formData.get("next");
 
   if (typeof tokenHash !== "string" || !tokenHash || typeof type !== "string" || !type) {
     redirect("/entrar?erro=link-invalido");
@@ -23,5 +24,5 @@ export async function confirmarAcesso(formData: FormData) {
     redirect("/entrar?erro=link-invalido");
   }
 
-  redirect(destinoParaTipo(type));
+  redirect(destinoParaTipo(type, typeof next === "string" ? next : null));
 }
