@@ -30,6 +30,7 @@ export default function QuizSaudeFitness() {
   const [resultado, setResultado] = useState<{
     diagnostico: string;
     planoSugerido: string | null;
+    plano: string[];
   } | null>(null);
 
   function escolherOpcao(perguntaId: string, valor: string) {
@@ -74,7 +75,11 @@ export default function QuizSaudeFitness() {
       }
 
       const dados = await resposta.json();
-      setResultado({ diagnostico: dados.diagnostico, planoSugerido: dados.planoSugerido });
+      setResultado({
+        diagnostico: dados.diagnostico,
+        planoSugerido: dados.planoSugerido,
+        plano: Array.isArray(dados.plano) ? dados.plano : [],
+      });
     } catch {
       setMensagemErro("Não consegui montar teu diagnóstico agora. Tenta de novo em instantes.");
     } finally {
@@ -94,6 +99,23 @@ export default function QuizSaudeFitness() {
         <Card className="flex flex-col gap-3">
           <p className="whitespace-pre-wrap text-sm text-tinta">{resultado.diagnostico}</p>
         </Card>
+        {resultado.plano.length > 0 && (
+          <Card className="flex flex-col gap-3">
+            <p className="font-titulo text-sm font-bold text-tinta">Teu plano pra começar</p>
+            <ul className="flex flex-col gap-2">
+              {resultado.plano.map((habito, indice) => (
+                <li key={indice} className="flex gap-2 text-sm text-tinta">
+                  <span className="text-verde-escuro">✓</span>
+                  <span>{habito}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-tinta-suave">
+              Cria tua conta com o mesmo e-mail que você usou aqui pra ver esse plano guardado no
+              teu Início.
+            </p>
+          </Card>
+        )}
         <Card className="flex flex-col gap-3 text-center">
           <p className="text-sm text-tinta-suave">
             {resultado.planoSugerido && NOMES_PLANO[resultado.planoSugerido]

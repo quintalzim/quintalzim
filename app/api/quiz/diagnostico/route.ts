@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
 
   let diagnostico: string;
   let planoSugerido: string | null = null;
+  let plano: string[] = [];
 
   try {
     const respostaN8n = await fetch(URL_WEBHOOK_N8N, {
@@ -46,6 +47,7 @@ export async function POST(request: NextRequest) {
     const dados = await respostaN8n.json();
     diagnostico = dados.diagnostico || "";
     planoSugerido = dados.planoSugerido || null;
+    plano = Array.isArray(dados.plano) ? dados.plano.filter((item: unknown) => typeof item === "string") : [];
 
     if (!diagnostico) {
       return NextResponse.json({ erro: "Não consegui montar o diagnóstico agora." }, { status: 502 });
@@ -64,8 +66,9 @@ export async function POST(request: NextRequest) {
       respostas,
       diagnostico,
       plano_sugerido: planoSugerido,
+      plano_habitos: plano,
     });
   }
 
-  return NextResponse.json({ diagnostico, planoSugerido });
+  return NextResponse.json({ diagnostico, planoSugerido, plano });
 }

@@ -1,5 +1,7 @@
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
+import { clienteAdmin } from "@/lib/push-servidor";
+import { buscarPlanoHabitos } from "@/lib/quiz/plano-habitos";
 import { createClient } from "@/lib/supabase/server";
 
 function formatarDataHora(iso: string): string {
@@ -31,6 +33,9 @@ export default async function InicioPage() {
         .maybeSingle()
     : { data: null };
 
+  const admin = user ? clienteAdmin() : null;
+  const planoHabitos = admin && user ? await buscarPlanoHabitos(admin, user.id, user.email) : null;
+
   return (
     <div className="mx-auto flex max-w-md flex-col gap-5">
       <div>
@@ -52,6 +57,21 @@ export default async function InicioPage() {
           </p>
         )}
       </Card>
+
+      {planoHabitos && (
+        <Card className="flex flex-col gap-2">
+          <Selo variante="verde">Teu plano de hábitos</Selo>
+          <p className="text-sm text-tinta-suave">Do diagnóstico que o Prontim montou pra ti.</p>
+          <ul className="flex flex-col gap-2 pt-1">
+            {planoHabitos.plano.map((habito, indice) => (
+              <li key={indice} className="flex gap-2 text-sm text-tinta">
+                <span className="text-verde-escuro">✓</span>
+                <span>{habito}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       <Card className="flex flex-col gap-2">
         <Selo variante="verde">Em breve</Selo>
