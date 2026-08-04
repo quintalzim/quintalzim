@@ -30,10 +30,17 @@ function formatarDataHora(iso: string): string {
   }
 }
 
+// Não tem duração de serviço cadastrada ainda, então usamos uma janela fixa
+// como aproximação de "horário ocupado": dois confirmados a menos de 1h de
+// distância viram um alerta de possível conflito.
+const JANELA_CONFLITO_MS = 60 * 60 * 1000;
+
 export default function PainelAgendamentos({
+  empresaId,
   empresaNome,
   agendamentosIniciais,
 }: {
+  empresaId: string;
   empresaNome: string;
   agendamentosIniciais: Agendamento[];
 }) {
@@ -42,6 +49,31 @@ export default function PainelAgendamentos({
   const [processando, setProcessando] = useState<string | null>(null);
 
   async function atualizarStatus(agendamento: Agendamento, novoStatus: "confirmado" | "recusado") {
+    if (novoStatus === "confirmado") {
+      const alvo = new Date(agendamento.data_hora_desejada).getTime();
+      const inicioJanela = new Date(alvo - JANELA_CONFLITO_MS).toISOString();
+      const fimJanela = new Date(alvo + JANELA_CONFLITO_MS).toISOString();
+
+      const { data: conflitos } = await supabase
+        .from("agendamentos")
+        .select("nome_cliente, data_hora_desejada")
+        .eq("empresa_id", empresaId)
+        .eq("status", "confirmado")
+        .neq("id", agendamento.id)
+        .gte("data_hora_desejada", inicioJanela)
+        .lte("data_hora_desejada", fimJanela);
+
+      if (conflitos && conflitos.length > 0) {
+        const lista = conflitos
+          .map((c) => `${c.nome_cliente || "Cliente"} às ${formatarDataHora(c.data_hora_desejada)}`)
+          .join(", ");
+        const seguir = window.confirm(
+          `Já tem horário confirmado perto desse: ${lista}. Confirmar esse também?`
+        );
+        if (!seguir) return;
+      }
+    }
+
     setProcessando(agendamento.id);
 
     const { error } = await supabase

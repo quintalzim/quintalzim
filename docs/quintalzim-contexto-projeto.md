@@ -36,6 +36,10 @@
 
 *Bug encontrado em seguida (assinante Celso): `/app/perfil` sempre mostrava o card "Tem um negócio? Cadastrar minha Empresa", mesmo pra quem já tinha Empresa criada — o card era estático, nunca checava se já existia uma. Corrigido: `app/app/perfil/page.tsx` agora busca `empresas` do dono e mostra "Minha Empresa" (nome + link "Gerenciar") se já existe, ou o convite de cadastro original se não existe.*
 
+*Checagem de disponibilidade na Recepcionista, construída: `PainelAgendamentos` agora recebe `empresaId` e, ao confirmar um pedido, busca outros agendamentos `confirmado` da mesma Empresa numa janela de 1h em torno do horário pedido (não existe duração de serviço cadastrada ainda, então essa janela fixa é a aproximação usada). Se achar, mostra um `window.confirm` avisando quem já tá confirmado perto daquele horário — a decisão final continua sendo do dono (pode confirmar mesmo assim, ex: serviço rápido). Sem migração de banco, só lógica em cima do que já existia.*
+
+*Concierge (Prontim entender qualquer pedido e rotear entre os módulos do catálogo) discutido e adiado por decisão do usuário: hoje o "Prontim - Atendimento" só faz uma coisa real (detectar despesa/receita → feature do Quintal de Finanças), com fallback de chat genérico sem capacidade nenhuma atrás. Os outros módulos do catálogo (Calorias por Foto, Quiz-Funil, Briefings, Utilitários) ainda não existem, e o próprio "Prontim no WhatsApp" segue marcado "Em breve" em `/app/catalogo` — não tem pra onde rotear de verdade ainda. Retomar quando fizer sentido (ativação oficial do canal, ou fallback mais honesto sobre o que o Prontim ainda não faz).*
+
 ---
 
 ## 1. O QUE É O QUINTALZIM

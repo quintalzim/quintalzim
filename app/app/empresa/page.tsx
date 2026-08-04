@@ -49,7 +49,11 @@ export default async function EmpresaPage() {
 
       <CardLinkEmpresa slug={empresa.slug} />
 
-      <PainelAgendamentos empresaNome={empresa.nome} agendamentosIniciais={agendamentos ?? []} />
+      <PainelAgendamentos
+        empresaId={empresa.id}
+        empresaNome={empresa.nome}
+        agendamentosIniciais={agendamentos ?? []}
+      />
 
       <Card className="flex flex-col gap-3">
         <Selo variante="verde">Vitrine</Selo>
