@@ -2,6 +2,7 @@ import CardLinkEmpresa from "@/components/app/CardLinkEmpresa";
 import FormularioCriarEmpresa from "@/components/app/FormularioCriarEmpresa";
 import FormularioEditarVitrine from "@/components/app/FormularioEditarVitrine";
 import PainelAgendamentos from "@/components/app/PainelAgendamentos";
+import PostDoDia from "@/components/app/PostDoDia";
 import WizardWhatsAppEmpresa from "@/components/app/WizardWhatsAppEmpresa";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
@@ -40,6 +41,14 @@ export default async function EmpresaPage() {
     .eq("empresa_id", empresa.id)
     .order("data_hora_desejada", { ascending: true });
 
+  const { data: postDoDia } = await supabase
+    .from("posts_empresa")
+    .select("conteudo, created_at")
+    .eq("empresa_id", empresa.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   return (
     <div className="mx-auto flex max-w-md flex-col gap-5">
       <div>
@@ -61,6 +70,14 @@ export default async function EmpresaPage() {
           O que aparece pra quem abre o teu link — preenche pra deixar mais completo.
         </p>
         <FormularioEditarVitrine empresaId={empresa.id} vitrineAtual={empresa} />
+      </Card>
+
+      <Card className="flex flex-col gap-3">
+        <Selo variante="verde">Post do dia</Selo>
+        <p className="text-sm text-tinta-suave">
+          Todo dia o Prontim escreve um texto novo com base na tua Vitrine — é só copiar e postar.
+        </p>
+        <PostDoDia conteudo={postDoDia?.conteudo ?? null} criadoEm={postDoDia?.created_at ?? null} />
       </Card>
 
       <WizardWhatsAppEmpresa empresa={empresa} />
