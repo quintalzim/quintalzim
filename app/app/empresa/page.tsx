@@ -1,3 +1,4 @@
+import BriefingEmpresa from "@/components/app/BriefingEmpresa";
 import CardLinkEmpresa from "@/components/app/CardLinkEmpresa";
 import FormularioCriarEmpresa from "@/components/app/FormularioCriarEmpresa";
 import FormularioEditarVitrine from "@/components/app/FormularioEditarVitrine";
@@ -49,6 +50,14 @@ export default async function EmpresaPage() {
     .limit(1)
     .maybeSingle();
 
+  const { data: briefingEmpresa } = await supabase
+    .from("briefings_empresa")
+    .select("mensagem, created_at")
+    .eq("empresa_id", empresa.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   return (
     <div className="mx-auto flex max-w-md flex-col gap-5">
       <div>
@@ -57,6 +66,14 @@ export default async function EmpresaPage() {
       </div>
 
       <CardLinkEmpresa slug={empresa.slug} />
+
+      <Card className="flex flex-col gap-2">
+        <Selo variante="verde">Resumo do dia</Selo>
+        <BriefingEmpresa
+          mensagem={briefingEmpresa?.mensagem ?? null}
+          criadoEm={briefingEmpresa?.created_at ?? null}
+        />
+      </Card>
 
       <PainelAgendamentos
         empresaId={empresa.id}
