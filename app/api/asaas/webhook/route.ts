@@ -23,7 +23,11 @@ export async function POST(request: NextRequest) {
   const evento = corpo?.event as string | undefined;
   const payment = corpo?.payment as { customer?: string; subscription?: string } | undefined;
 
-  if (!evento || !payment?.customer) {
+  // Casa pelo asaas_subscription_id, não pelo customer: desde que a escada de
+  // planos ficou completa, um mesmo cliente Asaas (mesmo CPF) pode ter várias
+  // assinaturas nossas ao mesmo tempo (PF + Empresa + Profissional), cada
+  // uma com seu próprio subscription id.
+  if (!evento || !payment?.subscription) {
     return NextResponse.json({ ok: true }); // evento que não precisamos tratar
   }
 
@@ -43,7 +47,7 @@ export async function POST(request: NextRequest) {
   await admin
     .from("assinaturas")
     .update({ status: novoStatus, updated_at: new Date().toISOString() })
-    .eq("asaas_customer_id", payment.customer);
+    .eq("asaas_subscription_id", payment.subscription);
 
   return NextResponse.json({ ok: true });
 }

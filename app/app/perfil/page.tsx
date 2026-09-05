@@ -7,6 +7,7 @@ import FormularioEditarTelefone from "@/components/app/FormularioEditarTelefone"
 import PainelAssinatura from "@/components/app/PainelAssinatura";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
+import { planosPorCategoria } from "@/lib/planos";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function PerfilPage() {
@@ -30,7 +31,12 @@ export default async function PerfilPage() {
   }
 
   const { data: assinatura } = user
-    ? await supabase.from("assinaturas").select("status, plano").eq("profile_id", user.id).maybeSingle()
+    ? await supabase
+        .from("assinaturas")
+        .select("status, plano")
+        .eq("profile_id", user.id)
+        .eq("categoria", "pf")
+        .maybeSingle()
     : { data: null };
 
   const { data: empresa } = user
@@ -105,7 +111,12 @@ export default async function PerfilPage() {
 
       <Card className="flex flex-col gap-3">
         <Selo variante="verde">Minha assinatura</Selo>
-        <PainelAssinatura assinatura={assinatura ?? null} cpfAtual={cpf} />
+        <PainelAssinatura
+          categoria="pf"
+          planos={planosPorCategoria("pf")}
+          assinatura={assinatura ?? null}
+          cpfAtual={cpf}
+        />
       </Card>
 
       <BotaoSairQuintal />

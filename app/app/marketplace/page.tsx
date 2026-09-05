@@ -1,9 +1,11 @@
 import Link from "next/link";
 import FormularioNovaDemanda from "@/components/app/FormularioNovaDemanda";
 import FormularioPerfilProfissional from "@/components/app/FormularioPerfilProfissional";
+import PainelAssinatura from "@/components/app/PainelAssinatura";
 import PainelMinhasDemandas from "@/components/app/PainelMinhasDemandas";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
+import { planosPorCategoria } from "@/lib/planos";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function MarketplaceAppPage() {
@@ -24,6 +26,15 @@ export default async function MarketplaceAppPage() {
     .from("profissionais_marketplace")
     .select("id, nome, descricao, cidade, contato, instagram, ativo, verificado")
     .eq("profile_id", user.id)
+    .maybeSingle();
+
+  const { data: perfilCpf } = await supabase.from("profiles").select("cpf").eq("id", user.id).maybeSingle();
+
+  const { data: assinaturaProfissional } = await supabase
+    .from("assinaturas")
+    .select("status, plano")
+    .eq("profile_id", user.id)
+    .eq("categoria", "profissional")
     .maybeSingle();
 
   const { data: minhasDemandas } = await supabase
@@ -56,6 +67,19 @@ export default async function MarketplaceAppPage() {
             : "Ainda não tens um perfil. Cria pra aparecer no diretório de Personal Trainers."}
         </p>
         <FormularioPerfilProfissional profileId={user.id} perfilAtual={perfil ?? null} />
+      </Card>
+
+      <Card className="flex flex-col gap-3">
+        <Selo variante="verde">Assinatura Profissional</Selo>
+        <p className="text-sm text-tinta-suave">
+          Destaque no diretório e recomendação da IA no plano de hábitos do Quiz-Funil.
+        </p>
+        <PainelAssinatura
+          categoria="profissional"
+          planos={planosPorCategoria("profissional")}
+          assinatura={assinaturaProfissional ?? null}
+          cpfAtual={perfilCpf?.cpf ?? ""}
+        />
       </Card>
 
       <Card className="flex flex-col gap-2">

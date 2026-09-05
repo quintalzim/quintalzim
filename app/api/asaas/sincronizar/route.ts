@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { sincronizarStatusAssinatura } from "@/lib/asaas";
 import { clienteAdmin } from "@/lib/push-servidor";
 import { createClient as createServerClient } from "@/lib/supabase/server";
@@ -6,7 +6,7 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 // Fallback manual: consulta o Asaas direto (em vez de esperar o webhook) e
 // atualiza o status da assinatura. Útil quando o webhook não foi configurado
 // a tempo ou falhou por qualquer motivo.
-export async function POST() {
+export async function POST(request: NextRequest) {
   const supabase = await createServerClient();
   const {
     data: { user },
@@ -14,6 +14,12 @@ export async function POST() {
 
   if (!user) {
     return NextResponse.json({ erro: "Não autorizado." }, { status: 401 });
+  }
+
+  const body = await request.json().catch(() => null);
+  const categoria = body?.categoria as string | undefined;
+  if (!categoria) {
+    return NextResponse.json({ erro: "Categoria não informada." }, { status: 400 });
   }
 
   const admin = clienteAdmin();
@@ -25,6 +31,7 @@ export async function POST() {
     .from("assinaturas")
     .select("asaas_subscription_id, status")
     .eq("profile_id", user.id)
+    .eq("categoria", categoria)
     .maybeSingle();
 
   if (!assinatura?.asaas_subscription_id) {
@@ -38,7 +45,8 @@ export async function POST() {
       await admin
         .from("assinaturas")
         .update({ status: statusAtualizado, updated_at: new Date().toISOString() })
-        .eq("profile_id", user.id);
+        .eq("profile_id", user.id)
+        .eq("categoria", categoria);
     }
 
     return NextResponse.json({ status: statusAtualizado });

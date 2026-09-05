@@ -3,6 +3,7 @@ import CardLinkEmpresa from "@/components/app/CardLinkEmpresa";
 import FormularioCriarEmpresa from "@/components/app/FormularioCriarEmpresa";
 import FormularioEditarVitrine from "@/components/app/FormularioEditarVitrine";
 import PainelAgendamentos from "@/components/app/PainelAgendamentos";
+import PainelAssinatura from "@/components/app/PainelAssinatura";
 import PainelCatalogo from "@/components/app/PainelCatalogo";
 import PainelPedidosCatalogo from "@/components/app/PainelPedidosCatalogo";
 import PostDoDia from "@/components/app/PostDoDia";
@@ -10,6 +11,7 @@ import WizardWhatsAppEmpresa from "@/components/app/WizardWhatsAppEmpresa";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
 import { calcularDreMesAtual } from "@/lib/empresa/dre";
+import { planosPorCategoria } from "@/lib/planos";
 import { createClient } from "@/lib/supabase/server";
 
 function formatarReais(valor: number): string {
@@ -79,6 +81,19 @@ export default async function EmpresaPage() {
     .eq("empresa_id", empresa.id)
     .order("created_at", { ascending: false });
 
+  const { data: perfilCpf } = await supabase
+    .from("profiles")
+    .select("cpf")
+    .eq("id", empresa.owner_id)
+    .maybeSingle();
+
+  const { data: assinaturaEmpresa } = await supabase
+    .from("assinaturas")
+    .select("status, plano")
+    .eq("profile_id", empresa.owner_id)
+    .eq("categoria", "empresa")
+    .maybeSingle();
+
   const dre = await calcularDreMesAtual(supabase, empresa.id, empresa.owner_id);
   const nomeMes = new Date().toLocaleDateString("pt-BR", { month: "long" });
 
@@ -90,6 +105,16 @@ export default async function EmpresaPage() {
       </div>
 
       <CardLinkEmpresa slug={empresa.slug} />
+
+      <Card className="flex flex-col gap-3">
+        <Selo variante="verde">Assinatura da Empresa</Selo>
+        <PainelAssinatura
+          categoria="empresa"
+          planos={planosPorCategoria("empresa")}
+          assinatura={assinaturaEmpresa ?? null}
+          cpfAtual={perfilCpf?.cpf ?? ""}
+        />
+      </Card>
 
       <Card className="flex flex-col gap-2">
         <Selo variante="verde">Resumo do dia</Selo>

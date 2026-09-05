@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import Botao from "@/components/ui/Botao";
 import Campo from "@/components/ui/Campo";
+import type { CategoriaPlano, Plano } from "@/lib/planos";
 
 type Assinatura = {
   status: string;
@@ -17,13 +18,22 @@ function rotuloStatus(status: string): string {
   return status;
 }
 
+function formatarReais(valor: number): string {
+  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
 export default function PainelAssinatura({
+  categoria,
+  planos,
   assinatura,
   cpfAtual,
 }: {
+  categoria: CategoriaPlano;
+  planos: Plano[];
   assinatura: Assinatura;
   cpfAtual: string;
 }) {
+  const [planoEscolhido, setPlanoEscolhido] = useState(planos[0]?.id ?? "");
   const [cpf, setCpf] = useState(cpfAtual);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
@@ -43,7 +53,7 @@ export default function PainelAssinatura({
       const resposta = await fetch("/api/asaas/assinar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cpf: cpfLimpo }),
+        body: JSON.stringify({ cpf: cpfLimpo, plano: planoEscolhido }),
       });
       const dados = await resposta.json();
       if (!resposta.ok) {
@@ -66,7 +76,11 @@ export default function PainelAssinatura({
     setCarregando(true);
     setErro("");
     try {
-      const resposta = await fetch("/api/asaas/sincronizar", { method: "POST" });
+      const resposta = await fetch("/api/asaas/sincronizar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ categoria }),
+      });
       const dados = await resposta.json();
       if (!resposta.ok) {
         setErro(dados.erro || "Não consegui checar agora.");
@@ -89,7 +103,11 @@ export default function PainelAssinatura({
     setCarregando(true);
     setErro("");
     try {
-      const resposta = await fetch("/api/asaas/cancelar", { method: "POST" });
+      const resposta = await fetch("/api/asaas/cancelar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ categoria }),
+      });
       const dados = await resposta.json();
       if (!resposta.ok) {
         setErro(dados.erro || "Não consegui cancelar agora.");
@@ -104,10 +122,11 @@ export default function PainelAssinatura({
   }
 
   if (assinatura && assinatura.status !== "cancelada") {
+    const planoAtual = planos.find((p) => p.id === assinatura.plano);
     return (
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-tinta-suave">Plano PF Base</span>
+          <span className="text-tinta-suave">{planoAtual?.nome ?? assinatura.plano}</span>
           <span className="font-semibold text-tinta">{rotuloStatus(assinatura.status)}</span>
         </div>
         {assinatura.status === "pendente" && (
@@ -138,10 +157,31 @@ export default function PainelAssinatura({
 
   return (
     <form onSubmit={assinar} className="flex flex-col gap-3">
-      <p className="text-sm text-tinta-suave">
-        Plano PF Base — <span className="font-semibold text-tinta">R$ 19/mês</span>, via Pix
-        recorrente.
-      </p>
+      {planos.length > 1 ? (
+        <div className="flex flex-col gap-2">
+          {planos.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setPlanoEscolhido(p.id)}
+              className={`flex items-center justify-between gap-3 rounded-lg border-2 p-3 text-left transition-colors ${
+                planoEscolhido === p.id ? "border-verde bg-verde/10" : "border-papel-2 bg-white/60"
+              }`}
+            >
+              <div>
+                <p className="font-semibold text-tinta">{p.nome}</p>
+                <p className="text-xs text-tinta-suave">{p.descricao}</p>
+              </div>
+              <span className="shrink-0 font-bold text-verde-escuro">{formatarReais(p.valor)}/mês</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-tinta-suave">
+          {planos[0]?.nome} — <span className="font-semibold text-tinta">{formatarReais(planos[0]?.valor ?? 0)}/mês</span>,
+          via Pix recorrente.
+        </p>
+      )}
       <Campo
         rotulo="CPF"
         type="text"

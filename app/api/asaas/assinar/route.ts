@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buscarClientePorCpf, criarAssinatura, criarCliente, buscarPrimeiraCobranca } from "@/lib/asaas";
+import { buscarPlano } from "@/lib/planos";
 import { clienteAdmin } from "@/lib/push-servidor";
 import { createClient as createServerClient } from "@/lib/supabase/server";
-
-const VALOR_PF_BASE = 19;
 
 function proximoDiaUtilISO(): string {
   // Asaas exige nextDueDate >= hoje. Usamos amanhã pra dar folga de fuso.
@@ -24,9 +23,15 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json().catch(() => null);
   const cpf = (body?.cpf as string | undefined)?.replace(/\D/g, "");
+  const planoId = body?.plano as string | undefined;
 
   if (!cpf || cpf.length !== 11) {
     return NextResponse.json({ erro: "CPF inválido." }, { status: 400 });
+  }
+
+  const plano = planoId ? buscarPlano(planoId) : null;
+  if (!plano) {
+    return NextResponse.json({ erro: "Plano inválido." }, { status: 400 });
   }
 
   const admin = clienteAdmin();
@@ -39,12 +44,16 @@ export async function POST(request: NextRequest) {
 
   const { data: assinaturaExistente } = await admin
     .from("assinaturas")
-    .select("id, status, asaas_subscription_id")
+    .select("id, status")
     .eq("profile_id", user.id)
+    .eq("categoria", plano.categoria)
     .maybeSingle();
 
   if (assinaturaExistente && assinaturaExistente.status === "ativa") {
-    return NextResponse.json({ erro: "Você já tem uma assinatura ativa." }, { status: 400 });
+    return NextResponse.json(
+      { erro: "Você já tem uma assinatura ativa nessa categoria. Cancela a atual antes de trocar." },
+      { status: 400 }
+    );
   }
 
   try {
@@ -56,21 +65,22 @@ export async function POST(request: NextRequest) {
 
     const assinatura = await criarAssinatura({
       customer: clienteAsaas.id,
-      value: VALOR_PF_BASE,
+      value: plano.valor,
       nextDueDate: proximoDiaUtilISO(),
-      description: "Quintalzim — Plano PF Base",
+      description: `Quintalzim — ${plano.nome}`,
     });
 
     await admin.from("assinaturas").upsert(
       {
         profile_id: user.id,
+        categoria: plano.categoria,
         asaas_customer_id: clienteAsaas.id,
         asaas_subscription_id: assinatura.id,
-        plano: "pf_base",
+        plano: plano.id,
         status: "pendente",
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "profile_id" }
+      { onConflict: "profile_id,categoria" }
     );
 
     const primeiraCobranca = await buscarPrimeiraCobranca(assinatura.id);
