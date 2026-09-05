@@ -7,7 +7,12 @@ import PostDoDia from "@/components/app/PostDoDia";
 import WizardWhatsAppEmpresa from "@/components/app/WizardWhatsAppEmpresa";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
+import { calcularDreMesAtual } from "@/lib/empresa/dre";
 import { createClient } from "@/lib/supabase/server";
+
+function formatarReais(valor: number): string {
+  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
 
 export default async function EmpresaPage() {
   const supabase = await createClient();
@@ -58,6 +63,9 @@ export default async function EmpresaPage() {
     .limit(1)
     .maybeSingle();
 
+  const dre = await calcularDreMesAtual(supabase, empresa.id, empresa.owner_id);
+  const nomeMes = new Date().toLocaleDateString("pt-BR", { month: "long" });
+
   return (
     <div className="mx-auto flex max-w-md flex-col gap-5">
       <div>
@@ -98,6 +106,30 @@ export default async function EmpresaPage() {
       </Card>
 
       <WizardWhatsAppEmpresa empresa={empresa} />
+
+      <Card className="flex flex-col gap-3">
+        <Selo variante="verde">Gestão</Selo>
+        <h2 className="text-lg font-bold text-tinta">DRE de {nomeMes}</h2>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-tinta-suave">Receita ({dre.qtdVendas} atendimento(s))</span>
+            <span className="font-semibold text-verde-escuro">{formatarReais(dre.receita)}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-tinta-suave">Despesa</span>
+            <span className="font-semibold text-terracota-escuro">{formatarReais(dre.despesa)}</span>
+          </div>
+          <div className="flex items-center justify-between border-t border-papel-2 pt-1.5 text-sm">
+            <span className="font-semibold text-tinta">Resultado</span>
+            <span className="font-bold text-tinta">{formatarReais(dre.resultado)}</span>
+          </div>
+        </div>
+        <p className="text-xs text-tinta-suave">
+          Receita conta só agendamentos confirmados com valor preenchido. Despesa puxa do Quintal
+          de Finanças as categorias com &quot;PJ&quot; no nome — se tua categoria da Empresa tem
+          outro nome, os números ficam incompletos.
+        </p>
+      </Card>
 
       <Card className="flex flex-col gap-2">
         <Selo variante="terracota">Em breve</Selo>

@@ -49,6 +49,8 @@ export default function PainelAgendamentos({
   const [processando, setProcessando] = useState<string | null>(null);
 
   async function atualizarStatus(agendamento: Agendamento, novoStatus: "confirmado" | "recusado") {
+    let valor: number | null = null;
+
     if (novoStatus === "confirmado") {
       const alvo = new Date(agendamento.data_hora_desejada).getTime();
       const inicioJanela = new Date(alvo - JANELA_CONFLITO_MS).toISOString();
@@ -72,13 +74,24 @@ export default function PainelAgendamentos({
         );
         if (!seguir) return;
       }
+
+      const valorDigitado = window.prompt(
+        "Valor do serviço (R$) — deixa em branco se não quiser registrar agora. Isso alimenta a Gestão/DRE da tua Empresa.",
+        ""
+      );
+      if (valorDigitado !== null && valorDigitado.trim() !== "") {
+        const normalizado = Number(valorDigitado.replace(",", "."));
+        if (!Number.isNaN(normalizado) && normalizado >= 0) {
+          valor = normalizado;
+        }
+      }
     }
 
     setProcessando(agendamento.id);
 
     const { error } = await supabase
       .from("agendamentos")
-      .update({ status: novoStatus })
+      .update({ status: novoStatus, ...(valor !== null ? { valor } : {}) })
       .eq("id", agendamento.id);
 
     if (!error) {
