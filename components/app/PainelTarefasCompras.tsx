@@ -94,9 +94,21 @@ export default function PainelTarefasCompras({ itensIniciais }: { itensIniciais:
     }
 
     setSalvando(true);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setErroManual("Sessão expirou. Recarrega a página e tenta de novo.");
+      setSalvando(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from("itens_lista")
       .insert({
+        profile_id: user.id,
         tipo: formAberto,
         texto: texto.trim(),
         quantidade: quantidade.trim() || null,

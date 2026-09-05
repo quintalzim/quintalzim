@@ -37,6 +37,18 @@ export default async function InicioPage() {
   const admin = user ? clienteAdmin() : null;
   const planoHabitos = admin && user ? await buscarPlanoHabitos(admin, user.id, user.email) : null;
 
+  const { data: itensAbertos } = user
+    ? await supabase
+        .from("itens_lista")
+        .select("id, tipo, texto, quantidade, prazo")
+        .eq("profile_id", user.id)
+        .eq("concluido", false)
+        .order("created_at", { ascending: false })
+    : { data: [] };
+
+  const tarefasAbertas = (itensAbertos ?? []).filter((i) => i.tipo === "tarefa");
+  const comprasAbertas = (itensAbertos ?? []).filter((i) => i.tipo === "compra");
+
   return (
     <div className="mx-auto flex max-w-md flex-col gap-5">
       <div>
@@ -58,6 +70,60 @@ export default async function InicioPage() {
           </p>
         )}
       </Card>
+
+      {(tarefasAbertas.length > 0 || comprasAbertas.length > 0) && (
+        <Card className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <Selo variante="verde">Pendências</Selo>
+            <Link
+              href="/app/tarefas"
+              className="font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+            >
+              Ver tudo →
+            </Link>
+          </div>
+
+          {tarefasAbertas.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <h2 className="text-sm font-bold text-tinta">
+                Tarefas em aberto ({tarefasAbertas.length})
+              </h2>
+              <ul className="flex flex-col gap-1">
+                {tarefasAbertas.slice(0, 4).map((item) => (
+                  <li key={item.id} className="flex items-center gap-2 text-sm text-tinta-suave">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-verde" />
+                    <span className="truncate">
+                      {item.texto}
+                      {item.prazo && (
+                        <span className="text-xs"> — {formatarDataHora(item.prazo)}</span>
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {comprasAbertas.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <h2 className="text-sm font-bold text-tinta">
+                Lista de compras ({comprasAbertas.length})
+              </h2>
+              <ul className="flex flex-col gap-1">
+                {comprasAbertas.slice(0, 4).map((item) => (
+                  <li key={item.id} className="flex items-center gap-2 text-sm text-tinta-suave">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-verde" />
+                    <span className="truncate">
+                      {item.texto}
+                      {item.quantidade && <span className="text-xs"> — {item.quantidade}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </Card>
+      )}
 
       {planoHabitos && (
         <Card className="flex flex-col gap-2">
