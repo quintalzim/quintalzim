@@ -76,13 +76,29 @@ const itens: { href: string; rotulo: string; icone: ReactNode }[] = [
   },
 ];
 
-export default function NavInferior() {
+const itemAdmin: { href: string; rotulo: string; icone: ReactNode } = {
+  href: "/app/admin",
+  rotulo: "Admin",
+  icone: (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={2} className="h-6 w-6">
+      <path
+        d="M12 3 5 6v5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+};
+
+export default function NavInferior({ ehSuperadmin = false }: { ehSuperadmin?: boolean }) {
   const pathname = usePathname();
+  const itensExibidos = ehSuperadmin ? [...itens, itemAdmin] : itens;
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-papel-2 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
       <ul className="mx-auto flex max-w-md items-stretch justify-between px-2">
-        {itens.map((item) => {
+        {itensExibidos.map((item) => {
           const ativo = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <li key={item.href} className="flex-1">

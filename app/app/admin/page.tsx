@@ -1,13 +1,14 @@
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
+import { ehSuperadmin } from "@/lib/admin/auth";
 import { buscarDadosAdmin } from "@/lib/admin/dashboard";
 import { clienteAdmin } from "@/lib/push-servidor";
 import { createClient } from "@/lib/supabase/server";
 
-// Painel de controle geral — só o fundador acessa. Sem PostHog (decisão do
-// usuário), essa página é a visão consolidada de contas/atividade da
-// plataforma inteira, lendo direto do Supabase via service role.
-const EMAIL_FUNDADOR = "celjordaor@gmail.com";
+// Painel de controle geral — só superadmin (profiles.role='admin') acessa.
+// Sem PostHog (decisão do usuário), essa página é a visão consolidada de
+// contas/atividade da plataforma inteira, lendo direto do Supabase via
+// service role.
 
 function formatarReais(valor: number): string {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -27,7 +28,21 @@ export default async function AdminPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user || user.email !== EMAIL_FUNDADOR) {
+  if (!user) {
+    return (
+      <div className="mx-auto flex max-w-md flex-col gap-3">
+        <p className="text-tinta-suave">Essa página é restrita.</p>
+      </div>
+    );
+  }
+
+  const { data: perfil } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!ehSuperadmin(perfil?.role)) {
     return (
       <div className="mx-auto flex max-w-md flex-col gap-3">
         <p className="text-tinta-suave">Essa página é restrita.</p>

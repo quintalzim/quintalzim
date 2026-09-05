@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import HeaderApp from "@/components/app/HeaderApp";
 import NavInferior from "@/components/app/NavInferior";
 import PortalRestritoClienteFinal from "@/components/app/PortalRestritoClienteFinal";
+import { ehSuperadmin } from "@/lib/admin/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AppLayout({
@@ -23,11 +24,12 @@ export default async function AppLayout({
 
   const { data: perfil } = await supabase
     .from("profiles")
-    .select("acesso_portal")
+    .select("acesso_portal, role")
     .eq("id", user.id)
     .maybeSingle();
 
   const restrito = perfil?.acesso_portal === "restrito";
+  const superadmin = ehSuperadmin(perfil?.role);
 
   if (restrito) {
     return (
@@ -44,7 +46,7 @@ export default async function AppLayout({
     <div className="flex min-h-screen flex-col bg-papel">
       <HeaderApp nome={primeiroNome} />
       <main className="flex-1 px-5 py-6 pb-24">{children}</main>
-      <NavInferior />
+      <NavInferior ehSuperadmin={superadmin} />
     </div>
   );
 }
