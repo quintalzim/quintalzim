@@ -3,8 +3,10 @@ import FormularioNovaDemanda from "@/components/app/FormularioNovaDemanda";
 import FormularioPerfilProfissional from "@/components/app/FormularioPerfilProfissional";
 import PainelAssinatura from "@/components/app/PainelAssinatura";
 import PainelMinhasDemandas from "@/components/app/PainelMinhasDemandas";
+import TelaBloqueada from "@/components/app/TelaBloqueada";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
+import { nivelAtende, nivelPF } from "@/lib/assinaturas";
 import { planosPorCategoria } from "@/lib/planos";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,6 +21,17 @@ export default async function MarketplaceAppPage() {
       <div className="mx-auto flex max-w-md flex-col gap-5">
         <p className="text-tinta-suave">Entra na tua conta pra acessar o Marketplace.</p>
       </div>
+    );
+  }
+
+  const nivel = await nivelPF(supabase, user.id);
+  if (!nivelAtende(nivel, "base")) {
+    return (
+      <TelaBloqueada
+        titulo="Marketplace"
+        descricao="Personal trainers da região e o Balcão de Demandas ficam disponíveis assinando o plano PF."
+        minimo="base"
+      />
     );
   }
 

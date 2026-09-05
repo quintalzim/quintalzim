@@ -1,17 +1,37 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Botao from "@/components/ui/Botao";
 import Card from "@/components/ui/Card";
+import Selo from "@/components/ui/Selo";
 import { createClient } from "@/lib/supabase/client";
 
 const URL_FINANCAS = "https://financas.quintalzim.com.br";
 
-export default function CardQuintalFinancas() {
+export default function CardQuintalFinancas({ bloqueado = false }: { bloqueado?: boolean }) {
   const router = useRouter();
   const supabase = createClient();
   const [abrindo, setAbrindo] = useState(false);
+
+  if (bloqueado) {
+    return (
+      <Card className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-tinta">Quintal de Finanças 🌱</h2>
+          <Selo variante="terracota">Base</Selo>
+        </div>
+        <p className="text-sm text-tinta-suave">Suas contas em ordem sem complicação</p>
+        <Link
+          href="/app/para-voce"
+          className="mt-1 font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+        >
+          Assinar pra desbloquear →
+        </Link>
+      </Card>
+    );
+  }
 
   async function handleAbrir() {
     setAbrindo(true);

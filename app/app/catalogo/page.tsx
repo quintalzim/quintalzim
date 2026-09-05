@@ -2,10 +2,21 @@ import Link from "next/link";
 import CardQuintalFinancas from "@/components/app/CardQuintalFinancas";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
+import { nivelAtende, nivelPF } from "@/lib/assinaturas";
+import { createClient } from "@/lib/supabase/server";
 
 const emBreve = [{ titulo: "Prontim no WhatsApp 💬", descricao: "Seu Prontim direto no zap." }];
 
-export default function CatalogoPage() {
+export default async function CatalogoPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const nivel = user ? await nivelPF(supabase, user.id) : "nenhum";
+  const temBase = nivelAtende(nivel, "base");
+  const temPremium = nivelAtende(nivel, "premium");
+
   return (
     <div className="mx-auto flex max-w-md flex-col gap-5">
       <div>
@@ -14,17 +25,27 @@ export default function CatalogoPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <CardQuintalFinancas />
+        <CardQuintalFinancas bloqueado={!temBase} />
 
         <Card className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-tinta">Calorias por Foto 📸</h2>
-            <Selo variante="verde">Ativo</Selo>
+            <Selo variante={temPremium ? "verde" : "terracota"}>
+              {temPremium ? "Ativo" : "Premium"}
+            </Selo>
           </div>
           <p className="text-sm text-tinta-suave">
             Tira uma foto do prato e manda pro Prontim no WhatsApp — ele estima as calorias na
             hora.
           </p>
+          {!temPremium && (
+            <Link
+              href="/app/para-voce"
+              className="mt-1 font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+            >
+              Assinar pra desbloquear →
+            </Link>
+          )}
         </Card>
 
         <Card className="flex flex-col gap-2">
@@ -72,33 +93,33 @@ export default function CatalogoPage() {
         <Card className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-tinta">Marketplace 🤝</h2>
-            <Selo variante="verde">Ativo</Selo>
+            <Selo variante={temBase ? "verde" : "terracota"}>{temBase ? "Ativo" : "Base"}</Selo>
           </div>
           <p className="text-sm text-tinta-suave">
             Personal trainers da região e o Balcão de Demandas — peça ajuda ou ofereça a sua.
           </p>
           <Link
-            href="/marketplace"
+            href={temBase ? "/marketplace" : "/app/para-voce"}
             className="mt-1 font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
           >
-            Abrir Marketplace →
+            {temBase ? "Abrir Marketplace →" : "Assinar pra desbloquear →"}
           </Link>
         </Card>
 
         <Card className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-tinta">Tarefas & Compras 📝</h2>
-            <Selo variante="verde">Ativo</Selo>
+            <Selo variante={temBase ? "verde" : "terracota"}>{temBase ? "Ativo" : "Base"}</Selo>
           </div>
           <p className="text-sm text-tinta-suave">
             Sem anotação solta no celular — digita ou fala e o Prontim organiza em tarefa ou
             compra pra você.
           </p>
           <Link
-            href="/app/tarefas"
+            href={temBase ? "/app/tarefas" : "/app/para-voce"}
             className="mt-1 font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
           >
-            Abrir Tarefas & Compras →
+            {temBase ? "Abrir Tarefas & Compras →" : "Assinar pra desbloquear →"}
           </Link>
         </Card>
 

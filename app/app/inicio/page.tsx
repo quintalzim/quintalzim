@@ -1,6 +1,9 @@
 import Link from "next/link";
+import Varal from "@/components/landing/Varal";
+import Botao from "@/components/ui/Botao";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
+import { nivelPF } from "@/lib/assinaturas";
 import { clienteAdmin } from "@/lib/push-servidor";
 import { buscarPlanoHabitos } from "@/lib/quiz/plano-habitos";
 import { createClient } from "@/lib/supabase/server";
@@ -49,12 +52,58 @@ export default async function InicioPage() {
   const tarefasAbertas = (itensAbertos ?? []).filter((i) => i.tipo === "tarefa");
   const comprasAbertas = (itensAbertos ?? []).filter((i) => i.tipo === "compra");
 
+  const nivel = user ? await nivelPF(supabase, user.id) : "nenhum";
+
+  if (nivel === "nenhum") {
+    return (
+      <div className="mx-auto flex max-w-md flex-col gap-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-extrabold text-tinta">Início</h1>
+          <p className="text-tinta-suave">Ainda falta pouco pra tudo isso ser seu.</p>
+        </div>
+
+        <Card className="flex flex-col gap-3 text-center">
+          <Selo variante="terracota">Assine pra desbloquear</Selo>
+          <p className="text-sm text-tinta-suave">
+            Finanças sem planilha, tarefas e compras organizadas sozinhas, chat com o Prontim,
+            Marketplace e um resumo do seu dia todo dia de manhã.
+          </p>
+          <Link href="/app/para-voce">
+            <Botao type="button" className="w-full">
+              Ver tudo que você ganha
+            </Botao>
+          </Link>
+        </Card>
+
+        <Varal />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto flex max-w-md flex-col gap-5">
       <div>
         <h1 className="text-2xl font-extrabold text-tinta">Início</h1>
         <p className="text-tinta-suave">Seus destaques por aqui, prontinho.</p>
       </div>
+
+      {nivel === "base" && (
+        <Card className="flex flex-col gap-2 border-2 border-amarelo/40">
+          <div className="flex items-center justify-between">
+            <Selo variante="amarelo">Premium</Selo>
+            <Link
+              href="/app/para-voce"
+              className="font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+            >
+              Ver mais →
+            </Link>
+          </div>
+          <p className="text-sm text-tinta-suave">
+            Faz upgrade pro Premium e leva o Prontim pro WhatsApp: despesa por texto ou áudio,
+            foto do prato pras calorias, tarefa e compra direto no zap.
+          </p>
+        </Card>
+      )}
 
       <Card className="flex flex-col gap-2">
         <Selo variante="verde">Resumo do dia</Selo>
