@@ -100,6 +100,8 @@
 
 *Chat do Prontim na web — v1: o `/app/prontim` era só um "Em breve"; agora tem um chat de verdade. Nova tabela `mensagens_prontim_web` (`docs/sql/prontim-chat-web.sql`) segue o mesmo padrão de segurança já usado em `assinaturas`/`quiz_leads` — RLS deixa o usuário só LER as próprias mensagens, a escrita (mensagem dele e resposta do Prontim) acontece via `clienteAdmin()` na rota `/api/prontim/mensagem`, nunca direto do navegador, pra ninguém conseguir forjar uma "resposta do Prontim". A rota chama um novo workflow n8n, "Prontim - Chat Web" (Webhook autenticado com a mesma credencial `Header Auth account 2` já usada no Estruturar Demanda → AI Agent com modelo `claude-haiku-4-5` → memória Redis própria, com chave `web:{profileId}` — separada da memória do WhatsApp, que é por telefone). O prompt desse Prontim "de portal" é diferente do prompt do WhatsApp: ele conhece e explica qualquer parte do Quintalzim (Perfil, Empresa, Marketplace, Ferramentas, o Prontim do WhatsApp), mas é instruído a ser honesto que ainda não executa ações por ali (não marca agendamento, não cadastra produto) — só orienta o caminho dentro do app. Testado ponta a ponta via `test_workflow` (execução 1786, resposta real do Claude, memória Redis salvando e carregando) e publicado. UI: `PainelChatProntim` (balões de mensagem, campo de texto, scroll automático), carregando o histórico salvo ao abrir a página.*
 
+*Ajuste de preços (05/set): PF Premium R$49→R$39, Empresa Start R$79→R$49, Empresa Pro R$149→R$79, Empresa Completo R$199→R$99 (PF Base e Profissional sem mudança). Alterado só em `lib/planos.ts` — como é a fonte única de verdade, `PainelAssinatura` (Perfil/Empresa/Marketplace), `/para-voce` e `/para-seu-negocio` já refletem os novos valores automaticamente. Textos que citavam preço fora dessa fonte também corrigidos: `Hero.tsx` ("a partir de R$79/mês" → R$49) e a tabela da escada nesta seção 2. Type-check limpo.*
+
 *Rodada de validação em produção (pós v1.13): Quiz-Funil (quiz + diagnóstico + plano de hábitos + vínculo por e-mail) confirmado funcionando ponta a ponta; Gestão/DRE confirmado (receita e despesa batendo certo depois de rodar o SQL de `agendamentos-valor`, que estava pendente); as 5 variáveis de push confirmadas em Production na Vercel; automação de lembretes 24h/2h confirmada rodando sozinha no n8n a cada 30 min (execuções recentes todas `Succeeded`); Prontim revalidado nos quatro canais (texto, áudio, foto, memória) sem sinal do bug de LID no teste; bug de exclusão recorrente do Quintal de Finanças (ver documento próprio desse produto) confirmado corrigido em produção. **Ícone do PWA trocado** pro novo logo (Q ornamentado com uvas/folhas), gerado em `icon-192`, `icon-512` e `icon-maskable-512` com margem de segurança pra máscara do Android. **Melhoria de UX:** os dois `window.prompt`/`window.confirm` nativos do navegador em `PainelAgendamentos` (valor do serviço ao confirmar, aviso de conflito de horário) foram trocados por modais no padrão visual do app; mudança de comportamento consciente — antes, cancelar o prompt de valor ainda confirmava o horário sem valor, agora "Cancelar" no modal cancela a confirmação por completo (mais previsível). **Meta Tech Provider, progresso real:** o painel do app mostrava uma pendência de "Torne-se um Provedor de Tecnologia" que gerou confusão sobre o status — na prática o caso de uso do WhatsApp e os requisitos de teste já estavam com Access Verification, "Login do Facebook para Empresas" foi configurado agora (domínio `quintalzim.com.br` liberado pro SDK JavaScript e como URI de redirect), e a **Verificação da Empresa foi reenviada e está oficialmente "em análise"** de novo no Business Manager (documentos preenchidos nesta sessão). Falta ainda: item "Análise do app" (App Review) no painel do desenvolvedor, e depois disso construir o código do Embedded Signup (botão real no `WizardWhatsAppEmpresa`, rota de callback OAuth, webhook da Cloud API) — nada disso codificado ainda, só a configuração do lado Meta.*
 
 ---
@@ -133,11 +135,11 @@ Portal único (super app PWA) por assinatura para pessoas e pequenas empresas de
 
 | Degrau | Faixa | Papel |
 |---|---|---|
-| PF Base | R$ 19–39/mês | Volume, porta de entrada |
-| PF Premium | R$ 39–59/mês | Acompanhamento ativo via WhatsApp |
-| Empresa Start | R$ 79/mês | Vitrine + agendamento + catálogo básico |
-| Empresa Pro | R$ 149/mês | + Recepcionista IA + posts diários |
-| Empresa Completo | R$ 199–249/mês | + vendas, despesas, DRE, clube de assinaturas* |
+| PF Base | R$ 19/mês | Volume, porta de entrada |
+| PF Premium | R$ 39/mês | Acompanhamento ativo via WhatsApp |
+| Empresa Start | R$ 49/mês | Vitrine + agendamento + catálogo básico |
+| Empresa Pro | R$ 79/mês | + Recepcionista IA + posts diários |
+| Empresa Completo | R$ 99/mês | + vendas, despesas, DRE, clube de assinaturas* |
 | Profissional | R$ 29–49/mês | Perfil no marketplace + recomendação da IA |
 | Sob medida | R$ 300–1.500 setup + mensalidade | Financia o ano 1; laboratório do SaaS |
 
@@ -170,7 +172,7 @@ Briefing empresarial diário (7h: agenda, vendas de ontem, dica de post) em todo
 
 ### Clube de Assinaturas — plano v1 (planejado, ainda não construído)
 
-Item do plano Empresa Completo (R$199/mês, ver escada de preços). É a Empresa oferecendo um plano recorrente pros **próprios clientes dela** — ex: barbearia com "Corte ilimitado — R$79/mês", academia com "Plano mensal", estética com "Manutenção mensal". Não confundir com a assinatura do Quintalzim (isso é o negócio vendendo assinatura pro cliente final dele).
+Item do plano Empresa Completo (ver escada de preços, seção 2). É a Empresa oferecendo um plano recorrente pros **próprios clientes dela** — ex: barbearia com "Corte ilimitado — R$79/mês", academia com "Plano mensal", estética com "Manutenção mensal". Não confundir com a assinatura do Quintalzim (isso é o negócio vendendo assinatura pro cliente final dele).
 
 **Decisão de escopo (do usuário, 05/set):** sem o split de pagamento (item 16 da seção 7, adiado), o dinheiro do cliente final não pode passar pela conta Asaas mestre do Quintalzim sem se misturar com a receita da própria plataforma. Em vez de cada Empresa conectar uma conta Asaas própria, o v1 segue o **mesmo padrão já usado em Agendamento e Catálogo & Loja**: a cobrança de verdade (Pix, cartão, dinheiro) a Empresa combina por fora com o cliente dela; o Quintalzim só registra o plano e quem assinou, com status controlado manualmente pelo dono. Zero integração de pagamento nova — reaproveita 100% o padrão de dados que já existe.
 

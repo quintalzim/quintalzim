@@ -34,7 +34,7 @@ export default function Hero() {
 
       <p className="text-xs text-tinta-suave">
         Criar sua conta é grátis. Assinar é opcional — pra você a partir de R$ 19/mês,
-        pro seu negócio a partir de R$ 79/mês.
+        pro seu negócio a partir de R$ 49/mês.
       </p>
     </section>
   );
