@@ -85,6 +85,23 @@ export default function CatalogoPage() {
           </Link>
         </Card>
 
+        <Card className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-tinta">Tarefas & Compras 📝</h2>
+            <Selo variante="verde">Ativo</Selo>
+          </div>
+          <p className="text-sm text-tinta-suave">
+            Sem anotação solta no celular — digita ou fala e o Prontim organiza em tarefa ou
+            compra pra você.
+          </p>
+          <Link
+            href="/app/tarefas"
+            className="mt-1 font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+          >
+            Abrir Tarefas & Compras →
+          </Link>
+        </Card>
+
         {emBreve.map((item) => (
           <Card key={item.titulo} className="flex flex-col gap-2 opacity-70">
             <div className="flex items-center justify-between">

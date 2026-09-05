@@ -159,6 +159,32 @@ Custo estimado de IA por assinante ativo: PF R$ 3–8/mês; Empresa R$ 10–30/m
 - **Quiz-Funil saúde/fitness** (estilo BetterMe): jornada visual → diagnóstico → oferta personalizada → plano real de hábitos com check-ins. Motor genérico em JSON, replicável (quiz finanças, diagnóstico do negócio). Funil principal de aquisição PF
 - **Briefings Inteligentes:** resumo diário por temas (push do PWA como canal principal — ver seção 10.5 — com opção WhatsApp/áudio), cruzando dados pessoais. Arquitetura um-para-muitos: 1 workflow por tema gera resumo-base (1 chamada cara/dia), distribuição personaliza com Haiku. Custo ≈ zero por assinante. Isca: 7 dias grátis
 - **Utilitários** (regra: máx 2-3 dias de produção cada; 1-2/semana pós-lançamento): conversor extrato→Excel (alimenta finanças/DRE), calculadoras (juros, dívidas, preço de serviço), gerador de recibos, gerador de bio/legenda. Funções: volume percebido, aquisição orgânica (versão grátis limitada), moeda de promoção
+- **Tarefas & Compras** — **v1 construído** (ver detalhamento abaixo): substitui as anotações soltas no celular do pequeno empresário (e serve igual pro assinante PF) — tarefas com prazo e lista de compras, com input manual e input inteligente (texto/voz livre que a IA organiza sozinha)
+
+### Tarefas & Compras — plano v1 (construído em 05/set)
+
+Pedido direto do usuário (05/set): pequenos empresários hoje controlam atividade, tarefa e lista de compra de forma manual, em anotação solta no celular. Módulo disponível pra **PF e Empresa juntos** (mesma estrutura de dados, cada um só vê o próprio) — card novo em `/app/catalogo`, página `/app/tarefas`.
+
+**Modelo de dados (a criar, `docs/sql/tarefas-compras.sql`):** uma tabela só, `itens_lista` (id, profile_id FK auth.users, tipo check em `tarefa`/`compra`, texto, quantidade opcional, concluido boolean default false, prazo timestamptz opcional, prioridade opcional check `baixa`/`media`/`alta`, origem default `manual` check `manual`/`ia`, created_at, updated_at). Sem conceito de "lista nomeada" no v1 (só os dois grupos fixos Tarefas/Compras) — evita a pessoa ter que administrar lista antes de administrar item; várias listas nomeadas fica como evolução natural se fizer falta depois. RLS: `auth.uid() = profile_id`, CRUD completo só do dono — mais simples que o padrão Empresa (não tem visitante público nem cliente final envolvido aqui).
+
+**Input manual:** formulário simples (escolhe Tarefa ou Compra, texto, prazo/prioridade/quantidade opcionais), mesmo padrão visual do "+ Adicionar item" do Catálogo.
+
+**Input inteligente — dois canais, construídos juntos (decisão do usuário):**
+- *Portal:* campo de texto com microfone (Web Speech API do navegador — a fala já vira texto no cliente, sem pipeline de áudio novo no servidor) em `/app/tarefas`. Texto livre (“comprar leite, pão e detergente” / “ligar pro fornecedor amanhã de manhã”) vai pra nova rota `POST /api/tarefas/extrair`, que chama um novo workflow n8n “Extrator de Tarefas e Compras” (mesmo padrão de webhook com header auth do Estruturar Demanda/Gerador de Bio) — Haiku separa o texto em um ou mais itens `{tipo, texto, quantidade?, prazo?}`, a rota insere todos de uma vez (`origem: 'ia'`).
+- *WhatsApp:* novo branch em “Prontim - Atendimento” — quando o Extrator de Despesas decide que a mensagem não é despesa/receita, tenta classificar como tarefa/compra (chama o mesmo workflow do portal) antes de cair no fallback conversacional genérico do Prontim Agent. Mesmo padrão de extensão já usado quando Calorias por Foto foi adicionada (branch novo em paralelo, sem mexer no que já funciona).
+
+**Avisos:** workflow agendado “Lembretes de Tarefas” (n8n, roda a cada 30 min), espelhando exatamente “Lembretes de Agendamento” — chama `POST /api/lembretes/tarefas`, que verifica itens `tipo='tarefa'`, `concluido=false`, `lembrete_enviado=false`, com `prazo` dentro das próximas 2h, dispara push (deep link `/app/tarefas`) e marca `lembrete_enviado=true` pra não repetir.
+
+**UI:** `PainelTarefasCompras` em `/app/tarefas` — duas seções (Tarefas/Compras), cada item com check de concluído, prazo/prioridade quando houver, botão remover; campo de input inteligente no topo.
+
+**v1 construído (05/set):**
+- SQL `docs/sql/tarefas-compras.sql`: tabela `itens_lista` (inclui `lembrete_enviado boolean default false`, usado pelo avisos) + RLS owner-only. **Ainda precisa ser rodado no Supabase pelo usuário** (SQL Editor → New query) — sem isso a tabela não existe em produção.
+- `/app/tarefas` (server) + `PainelTarefasCompras` (client): input manual, input inteligente (texto + microfone via Web Speech API), listas Tarefas/Compras com concluir/remover.
+- Card "Tarefas & Compras" adicionado em `/app/catalogo`.
+- `POST /api/tarefas/extrair` → n8n "Extrator de Tarefas e Compras" (webhook, Haiku, JSON estruturado) → grava direto via cliente autenticado (RLS, sem service role). Testado (execução 1790): frase composta virou 3 itens de compra + 1 tarefa com prazo calculado corretamente a partir da data atual.
+- WhatsApp: novo branch em "Prontim - Atendimento" (workflow live, id `N9EOkEYg8skWb8aI`) — quando o Extrator de Despesas não reconhece a mensagem como despesa (`erro: nao_entendi`), tenta o mesmo Extrator de Tarefas e Compras antes de cair no fallback conversacional do Prontim Agent; se achar item, grava em `itens_lista` (service role) e confirma no zap; se não achar nada, mantém o fallback honesto de sempre. Testado de ponta a ponta com telefone vinculado real (execução 1793) — extração e formatação corretas; a gravação no Supabase falhou só porque a tabela `itens_lista` ainda não existe em produção (mesma pendência do SQL acima), não é bug de lógica. Publicado.
+- n8n "Lembretes de Tarefas" (id `wazEv7ALYQs7GvqK`): schedule trigger 30 min → `POST /api/lembretes/tarefas`. Publicado. Rota ainda não deployada em produção (404 esperado até o próximo deploy).
+- **Pendências antes de funcionar de ponta a ponta:** (1) rodar `docs/sql/tarefas-compras.sql` no Supabase; (2) deploy do portal (sem variável de ambiente nova — reaproveita `PUSH_API_SECRET`); depois disso, testar input manual, input inteligente (texto e voz) no portal, classificação via WhatsApp, e o lembrete por prazo.
 
 ### Lado Empresa — esteira "Vitrine do Cliente" (modelo B2B2C, espinha dorsal)
 Cinco camadas empilháveis; cada uma cria necessidade da próxima:
