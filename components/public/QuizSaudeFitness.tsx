@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { quizSaudeFitness } from "@/lib/quiz/saude-fitness";
 import Botao from "@/components/ui/Botao";
 import Campo from "@/components/ui/Campo";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
+import { createClient } from "@/lib/supabase/client";
 
 const NOMES_PLANO: Record<string, string> = {
   pf_base: "PF Base",
@@ -14,6 +14,7 @@ const NOMES_PLANO: Record<string, string> = {
 };
 
 export default function QuizSaudeFitness() {
+  const supabase = createClient();
   const perguntas = quizSaudeFitness.perguntas;
   const total = perguntas.length;
 
@@ -26,6 +27,10 @@ export default function QuizSaudeFitness() {
   const [whatsapp, setWhatsapp] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [mensagemErro, setMensagemErro] = useState("");
+
+  const [enviandoLink, setEnviandoLink] = useState(false);
+  const [linkEnviado, setLinkEnviado] = useState(false);
+  const [erroLink, setErroLink] = useState("");
 
   const [resultado, setResultado] = useState<{
     diagnostico: string;
@@ -87,6 +92,28 @@ export default function QuizSaudeFitness() {
     }
   }
 
+  async function enviarLinkMagico() {
+    setErroLink("");
+    setEnviandoLink(true);
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/definir-senha-inicial`,
+        data: { name: nome, phone: whatsapp || null, origem: "quiz_saude_fitness" },
+      },
+    });
+
+    if (error) {
+      setErroLink("Não consegui mandar o link agora. Tenta de novo em instantes.");
+      setEnviandoLink(false);
+      return;
+    }
+
+    setLinkEnviado(true);
+    setEnviandoLink(false);
+  }
+
   if (resultado) {
     return (
       <div className="flex w-full max-w-sm flex-col gap-5">
@@ -111,22 +138,29 @@ export default function QuizSaudeFitness() {
               ))}
             </ul>
             <p className="text-xs text-tinta-suave">
-              Cria tua conta com o mesmo e-mail que você usou aqui pra ver esse plano guardado no
-              teu Início.
+              Esse plano já fica guardado no teu Início assim que você entrar no Quintalzim.
             </p>
           </Card>
         )}
         <Card className="flex flex-col gap-3 text-center">
-          <p className="text-sm text-tinta-suave">
-            {resultado.planoSugerido && NOMES_PLANO[resultado.planoSugerido]
-              ? `Pelo que você respondeu, o plano ${NOMES_PLANO[resultado.planoSugerido]} é o que mais combina contigo.`
-              : "Dá uma olhada no Quintalzim pra continuar a partir daqui."}
-          </p>
-          <Link href="/entrar">
-            <Botao type="button" className="w-full">
-              Conhecer o Quintalzim
-            </Botao>
-          </Link>
+          {linkEnviado ? (
+            <p className="rounded-lg bg-verde/10 px-4 py-3 text-sm font-semibold text-verde-escuro">
+              Prontim ✅ Mandamos um link pro teu e-mail ({email}). Abre a caixa de entrada (e o
+              spam, que às vezes ele se esconde lá) e clica nele pra entrar.
+            </p>
+          ) : (
+            <>
+              <p className="text-sm text-tinta-suave">
+                {resultado.planoSugerido && NOMES_PLANO[resultado.planoSugerido]
+                  ? `Pelo que você respondeu, o plano ${NOMES_PLANO[resultado.planoSugerido]} é o que mais combina contigo.`
+                  : "Dá uma olhada no Quintalzim pra continuar a partir daqui."}
+              </p>
+              {erroLink && <p className="text-sm text-terracota-escuro">{erroLink}</p>}
+              <Botao type="button" className="w-full" disabled={enviandoLink} onClick={enviarLinkMagico}>
+                {enviandoLink ? "Mandando..." : "Conhecer o Quintalzim"}
+              </Botao>
+            </>
+          )}
         </Card>
       </div>
     );

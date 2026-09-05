@@ -82,7 +82,8 @@ function EntrarConteudo() {
     }
 
     if (data.user && data.user.identities && data.user.identities.length === 0) {
-      setMensagemErro("Esse e-mail já tem portão aqui. Quer entrar?");
+      setModo("magico");
+      setMensagemErro("Esse e-mail já tem portão aqui. Te mandamos um link pra entrar sem senha:");
       setCarregando(false);
       return;
     }
