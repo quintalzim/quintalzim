@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import MockupTelefone from "@/components/landing/MockupTelefone";
 import { planosPorCategoria } from "@/lib/planos";
 
 export const metadata: Metadata = {
@@ -66,6 +67,72 @@ export default function ParaSeuNegocioPage() {
           Vitrine, agendamento, catálogo, posts e gestão financeira, tudo
           plugado no mesmo lugar.
         </p>
+      </section>
+
+      <section className="px-6 py-6">
+        <div className="mx-auto flex max-w-3xl flex-wrap justify-center gap-8">
+          <MockupTelefone>
+            <div className="flex flex-col gap-3 px-3">
+              <div>
+                <p className="text-[11px] font-semibold text-tinta-suave">quintalzim</p>
+                <h3 className="text-lg font-extrabold text-tinta">Loja da Ana</h3>
+                <p className="text-[11px] text-tinta-suave">Painel da tua Empresa.</p>
+              </div>
+              <div className="rounded-xl bg-white p-3 shadow-[var(--shadow-quintal-sm)]">
+                <span className="inline-flex rounded-full bg-verde/10 px-2 py-0.5 text-[10px] font-semibold text-verde-escuro">
+                  Compartilhe com clientes
+                </span>
+                <p className="mt-2 text-[11px] leading-relaxed text-tinta-suave">
+                  Manda esse link no Status ou no balcão. Quem clicar já pode pedir horário.
+                </p>
+                <div className="mt-2 truncate rounded-lg border border-papel-2 bg-papel px-2 py-1.5 text-[10px] text-tinta-suave">
+                  quintalzim.com.br/b/loja-da-ana
+                </div>
+              </div>
+              <div className="rounded-xl bg-white p-3 shadow-[var(--shadow-quintal-sm)]">
+                <p className="text-sm font-bold text-tinta">Pedidos de horário</p>
+                <div className="mt-2 flex flex-col gap-1 text-[11px] text-tinta-suave">
+                  <p>Mariana — Corte — confirmado ✅</p>
+                  <p>João — Barba — confirmado ✅</p>
+                </div>
+              </div>
+            </div>
+          </MockupTelefone>
+
+          <MockupTelefone>
+            <div className="flex flex-col gap-3 px-3 text-center">
+              <div>
+                <p className="text-[11px] font-semibold text-verde-escuro">quintalzim</p>
+                <h3 className="text-lg font-extrabold text-tinta">Loja da Ana</h3>
+              </div>
+              <div className="rounded-xl bg-white p-3 text-left shadow-[var(--shadow-quintal-sm)]">
+                <span className="inline-flex rounded-full bg-verde/10 px-2 py-0.5 text-[10px] font-semibold text-verde-escuro">
+                  Catálogo
+                </span>
+                <div className="mt-2 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-tinta">Corte de cabelo</p>
+                    <p className="text-[10px] text-tinta-suave">serviço</p>
+                  </div>
+                  <p className="font-bold text-verde-escuro">R$ 35,00</p>
+                </div>
+              </div>
+              <div className="rounded-xl bg-white p-3 text-left shadow-[var(--shadow-quintal-sm)]">
+                <p className="text-[11px] font-semibold text-tinta">O que você precisa?</p>
+                <div className="mt-1 rounded-lg border border-papel-2 bg-papel px-2 py-1.5 text-[10px] text-tinta-suave">
+                  Ex: Corte de cabelo
+                </div>
+                <p className="mt-2 text-[11px] font-semibold text-tinta">Data e horário</p>
+                <div className="mt-1 rounded-lg border border-papel-2 bg-papel px-2 py-1.5 text-[10px] text-tinta-suave">
+                  dd/mm/aaaa --:--
+                </div>
+                <div className="mt-2 rounded-lg bg-terracota py-1.5 text-center text-[11px] font-semibold text-papel">
+                  Pedir horário
+                </div>
+              </div>
+            </div>
+          </MockupTelefone>
+        </div>
       </section>
 
       <section className="bg-verde-escuro px-6 py-14 text-papel">

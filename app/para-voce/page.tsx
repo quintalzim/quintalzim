@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import MockupTelefone from "@/components/landing/MockupTelefone";
 import { planosPorCategoria } from "@/lib/planos";
 
 export const metadata: Metadata = {
@@ -60,6 +61,73 @@ export default function ParaVocePage() {
           O Prontim cuida das coisas chatas do dia a dia pra você sobrar tempo
           pro que importa.
         </p>
+      </section>
+
+      <section className="px-6 py-6">
+        <div className="mx-auto flex max-w-3xl flex-wrap justify-center gap-8">
+          <MockupTelefone>
+            <div className="flex flex-col gap-4 px-3">
+              <div>
+                <p className="text-[11px] font-semibold text-tinta-suave">quintalzim</p>
+                <h3 className="text-lg font-extrabold text-tinta">Início</h3>
+                <p className="text-[11px] text-tinta-suave">Seus destaques por aqui, prontinho.</p>
+              </div>
+              <div className="rounded-xl bg-white p-3 shadow-[var(--shadow-quintal-sm)]">
+                <span className="inline-flex rounded-full bg-verde/10 px-2 py-0.5 text-[10px] font-semibold text-verde-escuro">
+                  Resumo do dia
+                </span>
+                <p className="mt-2 text-[11px] leading-relaxed text-tinta">
+                  Ontem você registrou R$ 84,90 em despesas, principalmente com mercado. Já
+                  separei por categoria pra você não perder o fio. Prontim ✅
+                </p>
+              </div>
+              <div className="rounded-xl bg-white p-3 shadow-[var(--shadow-quintal-sm)]">
+                <span className="inline-flex rounded-full bg-amarelo/20 px-2 py-0.5 text-[10px] font-semibold text-[#7a5417]">
+                  Plano de hábitos
+                </span>
+                <p className="mt-2 text-[11px] leading-relaxed text-tinta">
+                  Hoje: 30 min de caminhada e 2L de água. Você já bateu 4 de 7 dias essa
+                  semana 🌱
+                </p>
+              </div>
+            </div>
+          </MockupTelefone>
+
+          <MockupTelefone>
+            <div className="flex flex-col gap-3 px-3">
+              <div>
+                <p className="text-[11px] font-semibold text-tinta-suave">quintalzim</p>
+                <h3 className="text-lg font-extrabold text-tinta">Catálogo</h3>
+                <p className="text-[11px] text-tinta-suave">Todos os mini-apps num lugar só.</p>
+              </div>
+              <div className="rounded-xl bg-white p-3 shadow-[var(--shadow-quintal-sm)]">
+                <p className="text-sm font-bold text-tinta">Quintal de Finanças 🌱</p>
+                <p className="mt-1 text-[11px] text-tinta-suave">Suas contas em ordem sem complicação</p>
+                <div className="mt-2 rounded-lg bg-terracota py-1.5 text-center text-[11px] font-semibold text-papel">
+                  Abrir
+                </div>
+              </div>
+              <div className="rounded-xl bg-white p-3 shadow-[var(--shadow-quintal-sm)]">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-bold text-tinta">Calorias por Foto 📸</p>
+                  <span className="rounded-full bg-verde/10 px-2 py-0.5 text-[10px] font-semibold text-verde-escuro">
+                    Ativo
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] text-tinta-suave">Manda a foto, o Prontim estima na hora</p>
+              </div>
+              <div className="rounded-xl bg-white p-3 shadow-[var(--shadow-quintal-sm)]">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-bold text-tinta">Briefings do Dia ☀️</p>
+                  <span className="rounded-full bg-verde/10 px-2 py-0.5 text-[10px] font-semibold text-verde-escuro">
+                    Ativo
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] text-tinta-suave">Um resumo pronto, todo dia de manhã</p>
+              </div>
+            </div>
+          </MockupTelefone>
+        </div>
       </section>
 
       <section className="bg-papel-2 px-6 py-14">
