@@ -4,40 +4,16 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import Botao from "@/components/ui/Botao";
 import Campo from "@/components/ui/Campo";
+import { aplicarMascaraTelefone, formatarTelefoneExibicao, normalizarTelefone } from "@/lib/telefone";
 import { createClient } from "@/lib/supabase/client";
-
-function normalizarTelefone(bruto: string): string | null {
-  const digitos = bruto.replace(/\D/g, "");
-  if (!digitos) return null;
-
-  // Já veio com DDI (ex: 55...): usa como está se tiver 12-13 dígitos
-  if (digitos.length === 12 || digitos.length === 13) return digitos;
-
-  // Veio só com DDD + número (10 ou 11 dígitos): prefixa com 55 (Brasil)
-  if (digitos.length === 10 || digitos.length === 11) return `55${digitos}`;
-
-  return null;
-}
-
-function formatarParaExibicao(digitos: string): string {
-  // Espera formato 55DDNNNNNNNNN (com DDI 55 na frente)
-  const semDdi = digitos.startsWith("55") ? digitos.slice(2) : digitos;
-  const ddd = semDdi.slice(0, 2);
-  const resto = semDdi.slice(2);
-  if (resto.length === 9) {
-    return `(${ddd}) ${resto.slice(0, 5)}-${resto.slice(5)}`;
-  }
-  if (resto.length === 8) {
-    return `(${ddd}) ${resto.slice(0, 4)}-${resto.slice(4)}`;
-  }
-  return digitos;
-}
 
 export default function FormularioEditarTelefone({ telefoneAtual }: { telefoneAtual: string }) {
   const router = useRouter();
   const supabase = createClient();
 
-  const [telefone, setTelefone] = useState(telefoneAtual ? formatarParaExibicao(telefoneAtual) : "");
+  const [telefone, setTelefone] = useState(
+    telefoneAtual ? formatarTelefoneExibicao(telefoneAtual) : ""
+  );
   const [carregando, setCarregando] = useState(false);
   const [mensagemErro, setMensagemErro] = useState("");
   const [sucesso, setSucesso] = useState(false);
@@ -75,7 +51,7 @@ export default function FormularioEditarTelefone({ telefoneAtual }: { telefoneAt
       return;
     }
 
-    setTelefone(formatarParaExibicao(normalizado));
+    setTelefone(formatarTelefoneExibicao(normalizado));
     setSucesso(true);
     setCarregando(false);
     router.refresh();
@@ -88,15 +64,18 @@ export default function FormularioEditarTelefone({ telefoneAtual }: { telefoneAt
         name="telefone"
         type="tel"
         placeholder="(35) 99999-9999"
+        inputMode="numeric"
+        maxLength={16}
         required
         value={telefone}
         onChange={(e) => {
-          setTelefone(e.target.value);
+          setTelefone(aplicarMascaraTelefone(e.target.value));
           setSucesso(false);
         }}
       />
       <p className="text-xs text-tinta-suave">
-        É o número que você usa pra falar com o Prontim no WhatsApp.
+        É o número que você usa pra falar com o Prontim no WhatsApp — precisa ser celular (com o
+        9 na frente).
       </p>
       {mensagemErro && <p className="text-sm text-terracota-escuro">{mensagemErro}</p>}
       {sucesso && (

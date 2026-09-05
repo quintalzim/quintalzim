@@ -3,8 +3,9 @@
 import { FormEvent, useState } from "react";
 import Botao from "@/components/ui/Botao";
 import Campo from "@/components/ui/Campo";
+import { emailValido } from "@/lib/email";
 
-type Estado = "ocioso" | "enviando" | "sucesso";
+type Estado = "ocioso" | "enviando" | "sucesso" | "erro";
 
 export default function ListaEsperaForm() {
   const [email, setEmail] = useState("");
@@ -12,6 +13,12 @@ export default function ListaEsperaForm() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!emailValido(email)) {
+      setEstado("erro");
+      return;
+    }
+
     setEstado("enviando");
 
     try {
@@ -53,6 +60,9 @@ export default function ListaEsperaForm() {
           {estado === "enviando" ? "Enviando..." : "Quero ser vizinho fundador"}
         </Botao>
       </div>
+      {estado === "erro" && (
+        <p className="text-sm text-terracota-escuro">E-mail inválido. Confere se digitou certinho.</p>
+      )}
       <p className="text-xs text-tinta-suave">
         Prometido: nada de spam. Só o aviso de que o quintal abriu (e um mimo
         de fundador).

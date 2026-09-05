@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import Botao from "@/components/ui/Botao";
 import Campo from "@/components/ui/Campo";
+import { aplicarMascaraTelefone, normalizarTelefone } from "@/lib/telefone";
 import { createClient } from "@/lib/supabase/client";
 
 type Perfil = {
@@ -30,7 +31,9 @@ export default function FormularioPerfilProfissional({
   const [nome, setNome] = useState(perfilAtual?.nome ?? "");
   const [descricao, setDescricao] = useState(perfilAtual?.descricao ?? "");
   const [cidade, setCidade] = useState(perfilAtual?.cidade ?? "");
-  const [contato, setContato] = useState(perfilAtual?.contato ?? "");
+  const [contato, setContato] = useState(
+    perfilAtual?.contato ? aplicarMascaraTelefone(perfilAtual.contato) : ""
+  );
   const [instagram, setInstagram] = useState(perfilAtual?.instagram ?? "");
   const [ativo, setAtivo] = useState(perfilAtual?.ativo ?? true);
   const [carregando, setCarregando] = useState(false);
@@ -44,6 +47,11 @@ export default function FormularioPerfilProfissional({
 
     if (!nome.trim()) {
       setMensagemErro("Conta teu nome (ou nome do negócio).");
+      return;
+    }
+
+    if (contato.trim() && !normalizarTelefone(contato)) {
+      setMensagemErro("WhatsApp inválido. Confere o DDD e o número (com o 9 na frente).");
       return;
     }
 
@@ -110,9 +118,11 @@ export default function FormularioPerfilProfissional({
       <Campo
         rotulo="Contato (WhatsApp)"
         type="tel"
+        inputMode="numeric"
+        maxLength={16}
         placeholder="(35) 99999-9999"
         value={contato}
-        onChange={(e) => setContato(e.target.value)}
+        onChange={(e) => setContato(aplicarMascaraTelefone(e.target.value))}
       />
       <Campo
         rotulo="Instagram"

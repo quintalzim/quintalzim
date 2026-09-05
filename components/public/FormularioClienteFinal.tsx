@@ -3,7 +3,9 @@
 import { FormEvent, useState } from "react";
 import Botao from "@/components/ui/Botao";
 import Campo from "@/components/ui/Campo";
+import { emailValido } from "@/lib/email";
 import { normalizarTelefoneCliente } from "@/lib/empresa-clientes";
+import { aplicarMascaraTelefone } from "@/lib/telefone";
 import { createClient } from "@/lib/supabase/client";
 import { mensagemErroAuth } from "@/lib/supabase/erros";
 
@@ -29,8 +31,18 @@ export default function FormularioClienteFinal({
 
     const telefoneNormalizado = normalizarTelefoneCliente(telefone);
 
-    if (!nome.trim() || !telefoneNormalizado || !email.trim()) {
+    if (!nome.trim() || !email.trim() || !telefone.trim()) {
       setMensagemErro("Preenche nome, telefone (com DDD) e e-mail pra continuar.");
+      return;
+    }
+
+    if (!telefoneNormalizado) {
+      setMensagemErro("Telefone inválido. Confere o DDD e o número (com o 9 na frente).");
+      return;
+    }
+
+    if (!emailValido(email)) {
+      setMensagemErro("E-mail inválido. Confere se digitou certinho.");
       return;
     }
 
@@ -81,10 +93,12 @@ export default function FormularioClienteFinal({
         rotulo="WhatsApp"
         name="telefone"
         type="tel"
+        inputMode="numeric"
+        maxLength={16}
         placeholder="(35) 99999-9999"
         required
         value={telefone}
-        onChange={(e) => setTelefone(e.target.value)}
+        onChange={(e) => setTelefone(aplicarMascaraTelefone(e.target.value))}
       />
       <Campo
         rotulo="E-mail"

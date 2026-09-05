@@ -6,6 +6,8 @@ import Botao from "@/components/ui/Botao";
 import Campo from "@/components/ui/Campo";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
+import { emailValido } from "@/lib/email";
+import { aplicarMascaraTelefone, normalizarTelefone } from "@/lib/telefone";
 import { createClient } from "@/lib/supabase/client";
 
 const NOMES_PLANO: Record<string, string> = {
@@ -58,6 +60,17 @@ export default function QuizSaudeFitness() {
       return;
     }
 
+    if (!emailValido(email)) {
+      setMensagemErro("E-mail inválido. Confere se digitou certinho.");
+      return;
+    }
+
+    const whatsappNormalizado = whatsapp.trim() ? normalizarTelefone(whatsapp) : null;
+    if (whatsapp.trim() && !whatsappNormalizado) {
+      setMensagemErro("WhatsApp inválido. Confere o DDD e o número (com o 9 na frente).");
+      return;
+    }
+
     setCarregando(true);
 
     try {
@@ -68,7 +81,7 @@ export default function QuizSaudeFitness() {
           quiz: quizSaudeFitness.id,
           nome: nome.trim(),
           email: email.trim(),
-          whatsapp: whatsapp.trim() || null,
+          whatsapp: whatsappNormalizado,
           respostas,
         }),
       });
@@ -100,7 +113,11 @@ export default function QuizSaudeFitness() {
       email,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback?next=/definir-senha-inicial`,
-        data: { name: nome, phone: whatsapp || null, origem: "quiz_saude_fitness" },
+        data: {
+          name: nome,
+          phone: whatsapp.trim() ? normalizarTelefone(whatsapp) : null,
+          origem: "quiz_saude_fitness",
+        },
       },
     });
 
@@ -198,9 +215,11 @@ export default function QuizSaudeFitness() {
               rotulo="WhatsApp (opcional)"
               name="whatsapp"
               type="tel"
+              inputMode="numeric"
+              maxLength={16}
               placeholder="(35) 99999-9999"
               value={whatsapp}
-              onChange={(e) => setWhatsapp(e.target.value)}
+              onChange={(e) => setWhatsapp(aplicarMascaraTelefone(e.target.value))}
             />
             {mensagemErro && <p className="text-sm text-terracota-escuro">{mensagemErro}</p>}
             <Botao type="submit" disabled={carregando}>

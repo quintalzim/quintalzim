@@ -6,6 +6,7 @@ import { FormEvent, Suspense, useState } from "react";
 import Botao from "@/components/ui/Botao";
 import Campo from "@/components/ui/Campo";
 import CampoSenha from "@/components/ui/CampoSenha";
+import { emailValido } from "@/lib/email";
 import { createClient } from "@/lib/supabase/client";
 import { mensagemErroAuth } from "@/lib/supabase/erros";
 
@@ -46,8 +47,14 @@ function EntrarConteudo() {
 
   async function handleEntrarSenha(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setCarregando(true);
     setMensagemErro("");
+
+    if (!emailValido(email)) {
+      setMensagemErro("E-mail inválido. Confere se digitou certinho.");
+      return;
+    }
+
+    setCarregando(true);
 
     const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
 
@@ -63,8 +70,14 @@ function EntrarConteudo() {
 
   async function handleCriarConta(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setCarregando(true);
     setMensagemErro("");
+
+    if (!emailValido(email)) {
+      setMensagemErro("E-mail inválido. Confere se digitou certinho.");
+      return;
+    }
+
+    setCarregando(true);
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -94,8 +107,14 @@ function EntrarConteudo() {
 
   async function handleMagicLink(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setCarregando(true);
     setMensagemErro("");
+
+    if (!emailValido(email)) {
+      setMensagemErro("E-mail inválido. Confere se digitou certinho.");
+      return;
+    }
+
+    setCarregando(true);
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -116,8 +135,14 @@ function EntrarConteudo() {
 
   async function handleRecuperar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setCarregando(true);
     setMensagemErro("");
+
+    if (!emailValido(email)) {
+      setMensagemErro("E-mail inválido. Confere se digitou certinho.");
+      return;
+    }
+
+    setCarregando(true);
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/callback?next=/redefinir-senha`,

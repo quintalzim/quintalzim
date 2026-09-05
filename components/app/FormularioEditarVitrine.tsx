@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import Botao from "@/components/ui/Botao";
 import Campo from "@/components/ui/Campo";
+import { aplicarMascaraTelefone } from "@/lib/telefone";
 import { createClient } from "@/lib/supabase/client";
 
 type VitrineAtual = {
@@ -26,7 +27,9 @@ export default function FormularioEditarVitrine({
 
   const [descricao, setDescricao] = useState(vitrineAtual.descricao ?? "");
   const [endereco, setEndereco] = useState(vitrineAtual.endereco ?? "");
-  const [telefoneContato, setTelefoneContato] = useState(vitrineAtual.telefone_contato ?? "");
+  const [telefoneContato, setTelefoneContato] = useState(
+    vitrineAtual.telefone_contato ? aplicarMascaraTelefone(vitrineAtual.telefone_contato) : ""
+  );
   const [instagram, setInstagram] = useState(vitrineAtual.instagram ?? "");
   const [horario, setHorario] = useState(vitrineAtual.horario_funcionamento ?? "");
   const [carregando, setCarregando] = useState(false);
@@ -37,6 +40,13 @@ export default function FormularioEditarVitrine({
     event.preventDefault();
     setMensagemErro("");
     setSucesso(false);
+
+    const digitosTelefone = telefoneContato.replace(/\D/g, "");
+    if (digitosTelefone && digitosTelefone.length !== 10 && digitosTelefone.length !== 11) {
+      setMensagemErro("Telefone de contato incompleto. Confere o DDD e o número.");
+      return;
+    }
+
     setCarregando(true);
 
     const { error } = await supabase
@@ -101,9 +111,11 @@ export default function FormularioEditarVitrine({
         rotulo="Telefone de contato (pra mostrar na Vitrine)"
         name="telefoneContato"
         type="tel"
+        inputMode="numeric"
+        maxLength={16}
         placeholder="(35) 99999-9999"
         value={telefoneContato}
-        onChange={(e) => setTelefoneContato(e.target.value)}
+        onChange={(e) => setTelefoneContato(aplicarMascaraTelefone(e.target.value))}
       />
       <Campo
         rotulo="Instagram"
