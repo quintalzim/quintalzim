@@ -1,6 +1,7 @@
 import Link from "next/link";
 import FinalizarVinculoCliente from "@/components/public/FinalizarVinculoCliente";
 import FormularioClienteFinal from "@/components/public/FormularioClienteFinal";
+import FormularioPedirCatalogo from "@/components/public/FormularioPedirCatalogo";
 import FormularioSolicitarAgendamento from "@/components/public/FormularioSolicitarAgendamento";
 import Card from "@/components/ui/Card";
 import { createClient } from "@/lib/supabase/server";
@@ -36,6 +37,14 @@ export default async function VitrinePage({
     data: { user },
   } = await supabase.auth.getUser();
 
+  const { data: produtos } = await supabase
+    .from("produtos_empresa")
+    .select("id, nome, descricao, preco, tipo")
+    .eq("empresa_id", empresa.id)
+    .eq("ativo", true)
+    .order("ordem", { ascending: true })
+    .order("created_at", { ascending: true });
+
   const detalhes = [
     empresa.endereco ? { rotulo: "Endereço", valor: empresa.endereco } : null,
     empresa.horario_funcionamento
@@ -66,6 +75,15 @@ export default async function VitrinePage({
               </div>
             ))}
           </Card>
+        )}
+
+        {user && produtos && produtos.length > 0 && (
+          <FormularioPedirCatalogo
+            empresaId={empresa.id}
+            empresaNome={empresa.nome}
+            ownerId={empresa.owner_id}
+            produtos={produtos}
+          />
         )}
 
         <Card className="flex flex-col gap-3">

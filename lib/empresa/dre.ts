@@ -19,13 +19,14 @@ function parseDataTransacao(str: string | null): Date | null {
   return null;
 }
 
-// DRE v1 da Empresa: reaproveita o que já existe, sem inventar modelo de
-// vendas/loja que ainda não existe (Catálogo & Loja é camada 5, futura).
-// Receita = soma do `valor` de agendamentos confirmados no mês (preenchido
-// pelo dono ao confirmar, ver PainelAgendamentos). Despesa = transações do
-// dono no Quintal de Finanças cuja categoria contém "PJ" — heurística v1,
-// já que não existe separação formal entre ledger pessoal e da Empresa;
-// validar na prática se faz sentido pra donos que nomeiam categoria diferente.
+// DRE v1 da Empresa: reaproveita o que já existe. Receita = soma do `valor`
+// de agendamentos confirmados no mês (preenchido pelo dono ao confirmar, ver
+// PainelAgendamentos) + soma de preco_unitario*quantidade dos pedidos do
+// Catálogo confirmados no mês (ver PainelPedidosCatalogo). Despesa =
+// transações do dono no Quintal de Finanças cuja categoria contém "PJ" —
+// heurística v1, já que não existe separação formal entre ledger pessoal e
+// da Empresa; validar na prática se faz sentido pra donos que nomeiam
+// categoria diferente.
 export async function calcularDreMesAtual(
   supabase: SupabaseClient,
   empresaId: string,
@@ -44,8 +45,27 @@ export async function calcularDreMesAtual(
     .gte("data_hora_desejada", inicioMes.toISOString())
     .lt("data_hora_desejada", fimMes.toISOString());
 
-  const receita = (agendamentos ?? []).reduce((soma, item) => soma + (Number(item.valor) || 0), 0);
-  const qtdVendas = (agendamentos ?? []).length;
+  const receitaAgendamentos = (agendamentos ?? []).reduce(
+    (soma, item) => soma + (Number(item.valor) || 0),
+    0
+  );
+
+  const { data: pedidosCatalogo } = await supabase
+    .from("pedidos_catalogo")
+    .select("preco_unitario, quantidade, created_at")
+    .eq("empresa_id", empresaId)
+    .eq("status", "confirmado")
+    .not("preco_unitario", "is", null)
+    .gte("created_at", inicioMes.toISOString())
+    .lt("created_at", fimMes.toISOString());
+
+  const receitaCatalogo = (pedidosCatalogo ?? []).reduce(
+    (soma, item) => soma + (Number(item.preco_unitario) || 0) * (Number(item.quantidade) || 1),
+    0
+  );
+
+  const receita = receitaAgendamentos + receitaCatalogo;
+  const qtdVendas = (agendamentos ?? []).length + (pedidosCatalogo ?? []).length;
 
   const { data: transacoes } = await supabase
     .from("transactions")
