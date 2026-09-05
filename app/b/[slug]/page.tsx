@@ -1,5 +1,6 @@
 import Link from "next/link";
 import FinalizarVinculoCliente from "@/components/public/FinalizarVinculoCliente";
+import FormularioAssinarClube from "@/components/public/FormularioAssinarClube";
 import FormularioClienteFinal from "@/components/public/FormularioClienteFinal";
 import FormularioPedirCatalogo from "@/components/public/FormularioPedirCatalogo";
 import FormularioSolicitarAgendamento from "@/components/public/FormularioSolicitarAgendamento";
@@ -45,6 +46,14 @@ export default async function VitrinePage({
     .order("ordem", { ascending: true })
     .order("created_at", { ascending: true });
 
+  const { data: planosClube } = await supabase
+    .from("planos_clube")
+    .select("id, nome, descricao, valor")
+    .eq("empresa_id", empresa.id)
+    .eq("ativo", true)
+    .order("ordem", { ascending: true })
+    .order("created_at", { ascending: true });
+
   const detalhes = [
     empresa.endereco ? { rotulo: "Endereço", valor: empresa.endereco } : null,
     empresa.horario_funcionamento
@@ -83,6 +92,15 @@ export default async function VitrinePage({
             empresaNome={empresa.nome}
             ownerId={empresa.owner_id}
             produtos={produtos}
+          />
+        )}
+
+        {user && planosClube && planosClube.length > 0 && (
+          <FormularioAssinarClube
+            empresaId={empresa.id}
+            empresaNome={empresa.nome}
+            ownerId={empresa.owner_id}
+            planos={planosClube}
           />
         )}
 

@@ -5,6 +5,7 @@ export type DreEmpresa = {
   despesa: number;
   resultado: number;
   qtdVendas: number;
+  qtdAssinantesClube: number;
 };
 
 // Mesmo parser flexível usado no Briefing Financeiro: a coluna `date` de
@@ -64,8 +65,25 @@ export async function calcularDreMesAtual(
     0
   );
 
-  const receita = receitaAgendamentos + receitaCatalogo;
+  // Clube de Assinaturas: diferente de agendamento/catálogo, não é uma venda
+  // pontual do mês — é receita recorrente enquanto a assinatura estiver
+  // `ativo`, então conta toda vez que o mês roda, independente de quando foi
+  // criada.
+  const { data: assinantesClube } = await supabase
+    .from("assinaturas_clube")
+    .select("valor_plano")
+    .eq("empresa_id", empresaId)
+    .eq("status", "ativo")
+    .not("valor_plano", "is", null);
+
+  const receitaClube = (assinantesClube ?? []).reduce(
+    (soma, item) => soma + (Number(item.valor_plano) || 0),
+    0
+  );
+
+  const receita = receitaAgendamentos + receitaCatalogo + receitaClube;
   const qtdVendas = (agendamentos ?? []).length + (pedidosCatalogo ?? []).length;
+  const qtdAssinantesClube = (assinantesClube ?? []).length;
 
   const { data: transacoes } = await supabase
     .from("transactions")
@@ -80,5 +98,5 @@ export async function calcularDreMesAtual(
     })
     .reduce((soma, transacao) => soma + Math.abs(Number(transacao.amount) || 0), 0);
 
-  return { receita, despesa, resultado: receita - despesa, qtdVendas };
+  return { receita, despesa, resultado: receita - despesa, qtdVendas, qtdAssinantesClube };
 }

@@ -3,8 +3,10 @@ import CardLinkEmpresa from "@/components/app/CardLinkEmpresa";
 import FormularioCriarEmpresa from "@/components/app/FormularioCriarEmpresa";
 import FormularioEditarVitrine from "@/components/app/FormularioEditarVitrine";
 import PainelAgendamentos from "@/components/app/PainelAgendamentos";
+import PainelAssinantesClube from "@/components/app/PainelAssinantesClube";
 import PainelAssinatura from "@/components/app/PainelAssinatura";
 import PainelCatalogo from "@/components/app/PainelCatalogo";
+import PainelClube from "@/components/app/PainelClube";
 import PainelPedidosCatalogo from "@/components/app/PainelPedidosCatalogo";
 import PostDoDia from "@/components/app/PostDoDia";
 import WizardWhatsAppEmpresa from "@/components/app/WizardWhatsAppEmpresa";
@@ -81,6 +83,20 @@ export default async function EmpresaPage() {
     .eq("empresa_id", empresa.id)
     .order("created_at", { ascending: false });
 
+  const { data: planosClube } = await supabase
+    .from("planos_clube")
+    .select("id, nome, descricao, valor, ativo")
+    .eq("empresa_id", empresa.id)
+    .order("created_at", { ascending: true });
+
+  const { data: assinantesClube } = await supabase
+    .from("assinaturas_clube")
+    .select(
+      "id, cliente_profile_id, nome_plano, valor_plano, nome_cliente, telefone_cliente, status"
+    )
+    .eq("empresa_id", empresa.id)
+    .order("created_at", { ascending: false });
+
   const { data: perfilCpf } = await supabase
     .from("profiles")
     .select("cpf")
@@ -153,7 +169,10 @@ export default async function EmpresaPage() {
         <h2 className="text-lg font-bold text-tinta">DRE de {nomeMes}</h2>
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-tinta-suave">Receita ({dre.qtdVendas} venda(s))</span>
+            <span className="text-tinta-suave">
+              Receita ({dre.qtdVendas} venda(s)
+              {dre.qtdAssinantesClube > 0 && ` + ${dre.qtdAssinantesClube} do Clube`})
+            </span>
             <span className="font-semibold text-verde-escuro">{formatarReais(dre.receita)}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
@@ -166,9 +185,10 @@ export default async function EmpresaPage() {
           </div>
         </div>
         <p className="text-xs text-tinta-suave">
-          Receita conta agendamentos e pedidos do Catálogo confirmados com valor preenchido.
-          Despesa puxa do Quintal de Finanças as categorias com &quot;PJ&quot; no nome — se tua
-          categoria da Empresa tem outro nome, os números ficam incompletos.
+          Receita conta agendamentos e pedidos do Catálogo confirmados com valor preenchido, mais
+          os assinantes ativos do Clube (contam todo mês, enquanto a assinatura durar). Despesa
+          puxa do Quintal de Finanças as categorias com &quot;PJ&quot; no nome — se tua categoria da
+          Empresa tem outro nome, os números ficam incompletos.
         </p>
       </Card>
 
@@ -177,6 +197,13 @@ export default async function EmpresaPage() {
       <PainelPedidosCatalogo
         empresaNome={empresa.nome}
         pedidosIniciais={pedidosCatalogo ?? []}
+      />
+
+      <PainelClube empresaId={empresa.id} planosIniciais={planosClube ?? []} />
+
+      <PainelAssinantesClube
+        empresaNome={empresa.nome}
+        assinantesIniciais={assinantesClube ?? []}
       />
     </div>
   );

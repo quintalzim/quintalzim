@@ -7,6 +7,7 @@ export async function POST(request: NextRequest) {
   const profileId = body?.profileId as string | undefined;
   const agendamentoId = body?.agendamentoId as string | undefined;
   const pedidoCatalogoId = body?.pedidoCatalogoId as string | undefined;
+  const assinaturaClubeId = body?.assinaturaClubeId as string | undefined;
   const empresaId = body?.empresaId as string | undefined;
   const demandaId = body?.demandaId as string | undefined;
   const titulo = (body?.titulo as string | undefined) || "Quintalzim";
@@ -74,6 +75,26 @@ export async function POST(request: NextRequest) {
 
       autorizado = Boolean(
         pedido && pedido.cliente_profile_id === profileId && empresaDoPedido?.owner_id === user.id
+      );
+    }
+
+    // Caso dono → cliente (Clube de Assinaturas): dono confirmando/atrasando
+    // a assinatura do clube avisa o cliente — mesmo padrão do pedidoCatalogoId.
+    if (!autorizado && assinaturaClubeId) {
+      const { data: assinatura } = await admin
+        .from("assinaturas_clube")
+        .select("cliente_profile_id, empresas(owner_id)")
+        .eq("id", assinaturaClubeId)
+        .maybeSingle();
+
+      const empresaDaAssinatura = Array.isArray(assinatura?.empresas)
+        ? assinatura.empresas[0]
+        : assinatura?.empresas;
+
+      autorizado = Boolean(
+        assinatura &&
+          assinatura.cliente_profile_id === profileId &&
+          empresaDaAssinatura?.owner_id === user.id
       );
     }
 

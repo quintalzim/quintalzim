@@ -168,6 +168,26 @@ Cinco camadas empilháveis; cada uma cria necessidade da próxima:
 
 Briefing empresarial diário (7h: agenda, vendas de ontem, dica de post) em todos os pacotes Empresa. Argumento de venda do Completo: substitui site+social media+secretária+gestão+contador (R$ 800–1.500/mês separado).
 
+### Clube de Assinaturas — plano v1 (planejado, ainda não construído)
+
+Item do plano Empresa Completo (R$199/mês, ver escada de preços). É a Empresa oferecendo um plano recorrente pros **próprios clientes dela** — ex: barbearia com "Corte ilimitado — R$79/mês", academia com "Plano mensal", estética com "Manutenção mensal". Não confundir com a assinatura do Quintalzim (isso é o negócio vendendo assinatura pro cliente final dele).
+
+**Decisão de escopo (do usuário, 05/set):** sem o split de pagamento (item 16 da seção 7, adiado), o dinheiro do cliente final não pode passar pela conta Asaas mestre do Quintalzim sem se misturar com a receita da própria plataforma. Em vez de cada Empresa conectar uma conta Asaas própria, o v1 segue o **mesmo padrão já usado em Agendamento e Catálogo & Loja**: a cobrança de verdade (Pix, cartão, dinheiro) a Empresa combina por fora com o cliente dela; o Quintalzim só registra o plano e quem assinou, com status controlado manualmente pelo dono. Zero integração de pagamento nova — reaproveita 100% o padrão de dados que já existe.
+
+**Modelo de dados (a criar, `docs/sql/clube-assinaturas.sql`):**
+- `planos_clube` (id, empresa_id FK, nome, descricao, valor, periodicidade default `'mensal'`, ativo, ordem, created_at). RLS: select público onde `ativo = true` (aparece na Vitrine), CRUD completo só pro dono via join em `empresas.owner_id` — mesmo padrão de `produtos_empresa`.
+- `assinaturas_clube` (id, empresa_id FK, plano_id FK, cliente_profile_id FK, nome_cliente, telefone_cliente, status default `'pendente'` check em `pendente/ativo/atrasado/cancelado`, observacao, created_at, updated_at). RLS: cliente vê/insere a própria (pedir pra entrar no clube), dono vê/atualiza via join — mesmo padrão de `pedidos_catalogo`.
+
+**UX Empresa (`/app/empresa`):** `PainelClube` (CRUD dos planos, igual ao `PainelCatalogo`) + `PainelAssinantesClube` (lista de quem pediu/assina, com ações "Confirmar pagamento" → `ativo`, "Marcar atrasado", "Cancelar" — igual ao `PainelPedidosCatalogo`).
+
+**UX cliente final (Vitrine `/b/[slug]`):** nova seção "Clube de Assinaturas" mostrando os planos ativos, botão "Quero assinar" → formulário simples (nome, telefone) → cria pedido com status `pendente` + push pro dono (retrofit da rota `/api/push/enviar`, novo parâmetro `assinaturaClubeId` espelhando o `pedidoCatalogoId` que já existe).
+
+**Gestão/DRE:** soma `assinaturas_clube` com status `ativo` (valor do plano) na receita mensal, ao lado de agendamentos e pedidos do Catálogo confirmados — mesmo `lib/empresa/dre.ts`.
+
+**Fora do escopo do v1** (fica pra quando o split existir): cobrança automática recorrente, comissão do Quintalzim sobre o clube, renovação automática de status (hoje é 100% manual pelo dono, igual o resto do portal).
+
+*Clube de Assinaturas — v1 construído (05/set):* `docs/sql/clube-assinaturas.sql` criou `planos_clube` e `assinaturas_clube` seguindo à risca o padrão de RLS de `produtos_empresa`/`pedidos_catalogo` (select público só do que está ativo, CRUD só do dono via join em `empresas.owner_id`). No painel da Empresa, dois cards novos: `PainelClube` (cadastrar/editar/pausar/remover planos, mesmo componente-espelho do `PainelCatalogo`) e `PainelAssinantesClube` (confirmar pagamento → `ativo`, marcar atrasado, cancelar — mesmo padrão do `PainelPedidosCatalogo`, com aviso push pro cliente a cada mudança de status via `assinaturaClubeId`, novo branch de autorização em `/api/push/enviar`). Na Vitrine pública (`/b/[slug]`), nova seção "Clube de Assinaturas" com `FormularioAssinarClube` — cliente escolhe o plano, pede pra entrar (status `pendente`), dono recebe push e confirma depois de combinar o pagamento por fora (reaproveita o branch `empresaId` que já existia no push, sem precisar de código novo ali). `lib/empresa/dre.ts` passou a somar a receita dos assinantes `ativo` do Clube — diferente de agendamento/catálogo, essa receita é recorrente e conta todo mês enquanto durar, não só no mês em que foi criada; o card de DRE em `/app/empresa` mostra "X venda(s) + Y do Clube" quando há assinantes. Type-check limpo. **Falta rodar `docs/sql/clube-assinaturas.sql` no Supabase, deploy, e testar**: cadastrar um plano na Empresa, pedir pra assinar como cliente (outra conta), confirmar no painel e ver a receita aparecer no DRE do mês.
+
 ### Marketplace (dois modos, um guarda-chuva)
 - **Perfis fixos:** ~~estreia com personal trainers~~ — **v1 feito e publicado** (ver seção 6). IA recomenda no momento certo do plano de hábitos. Profissional evolui de "item do catálogo" para cliente Empresa (ainda não construído — hoje o profissional só tem perfil no diretório, não uma Empresa completa)
 - **Balcão de Demandas:** ~~pedido pontual em linguagem natural → IA estrutura~~ — **v1 feito e publicado** (ver seção 6): sem raio geográfico real (campo "local" é texto livre) e sem avaliação/recomendação por critério ainda
@@ -263,6 +283,9 @@ curl -X POST https://n8n.quintalzim.com.br/webhook/prontim \
 11. ~~Memória de conversa do Prontim~~ — **feito e publicado.** Ver seção 6. Pré-requisito da Recepcionista cumprido
 12. ~~Push notifications reais do PWA~~ — **feito.** Ver seção 6. As 5 variáveis (`NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `SUPABASE_SERVICE_ROLE_KEY`, `PUSH_API_SECRET`) foram conferidas e confirmadas em Production na Vercel
 13. ~~Automação de disparo dos push (lembretes 24h/2h)~~ — **feito e confirmado em produção.** Workflow "Lembretes de Agendamento" no n8n está Ativo, rodando a cada 30 min sozinho, com a credencial "Push Lembretes Secret" configurada e execuções recentes todas `Succeeded`
+14. Redesenho visual das telas reais do app (Início, Empresa, Catálogo, Perfil, Marketplace) — **decisão do usuário: não vai fazer.** Encerrado, não é mais um item em aberto.
+15. Comissões de marketplace (Fase 2) — **decisão do usuário: não fazer agora.** Fica só registrado no roadmap (seção 8), sem trabalho em andamento.
+16. Split de pagamento na origem via subcontas Asaas (Fase 2) — **decisão do usuário: não fazer agora.** Mesma situação: registrado, sem trabalho em andamento. Isso também define o desenho do Clube de Assinaturas (item 17, seção 6): sem split pronto, o dinheiro do clube não pode passar pela conta Asaas mestre do Quintalzim.
 
 ---
 
