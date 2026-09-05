@@ -17,6 +17,11 @@ export default async function CatalogoPage() {
   const temBase = nivelAtende(nivel, "base");
   const temPremium = nivelAtende(nivel, "premium");
 
+  const { data: minhaEmpresa } = user
+    ? await supabase.from("empresas").select("id").eq("owner_id", user.id).maybeSingle()
+    : { data: null };
+  const temEmpresa = Boolean(minhaEmpresa);
+
   return (
     <div className="mx-auto flex max-w-md flex-col gap-5">
       <div>
@@ -54,8 +59,8 @@ export default async function CatalogoPage() {
             <Selo variante="verde">Ativo</Selo>
           </div>
           <p className="text-sm text-tinta-suave">
-            Todo dia de manhã, um resumo pronto: financeiro no Início, e da Empresa pra quem tem
-            negócio.
+            Todo dia de manhã, um resumo pronto: financeiro no Início
+            {temEmpresa ? ", e da Empresa pra quem tem negócio." : "."}
           </p>
           <div className="mt-1 flex gap-4">
             <Link
@@ -64,12 +69,14 @@ export default async function CatalogoPage() {
             >
               Ver no Início →
             </Link>
-            <Link
-              href="/app/empresa"
-              className="font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
-            >
-              Ver na Empresa →
-            </Link>
+            {temEmpresa && (
+              <Link
+                href="/app/empresa"
+                className="font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+              >
+                Ver na Empresa →
+              </Link>
+            )}
           </div>
         </Card>
 
