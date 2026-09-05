@@ -1,6 +1,6 @@
 import PainelTarefasCompras from "@/components/app/PainelTarefasCompras";
 import TelaBloqueada from "@/components/app/TelaBloqueada";
-import { nivelAtende, nivelPF } from "@/lib/assinaturas";
+import { nivelAtende, nivelPF, nomeNivelPF } from "@/lib/assinaturas";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function TarefasPage() {
@@ -15,7 +15,7 @@ export default async function TarefasPage() {
       <TelaBloqueada
         titulo="Tarefas & Compras"
         descricao="Organize tarefas e lista de compras direto no portal (e, no Premium, também pelo WhatsApp) assinando o plano PF."
-        minimo="base"
+        nomePlano={nomeNivelPF("base")}
       />
     );
   }

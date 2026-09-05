@@ -6,7 +6,7 @@ import PainelMinhasDemandas from "@/components/app/PainelMinhasDemandas";
 import TelaBloqueada from "@/components/app/TelaBloqueada";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
-import { nivelAtende, nivelPF } from "@/lib/assinaturas";
+import { nivelAtende, nivelPF, nomeNivelPF } from "@/lib/assinaturas";
 import { planosPorCategoria } from "@/lib/planos";
 import { createClient } from "@/lib/supabase/server";
 
@@ -30,7 +30,7 @@ export default async function MarketplaceAppPage() {
       <TelaBloqueada
         titulo="Marketplace"
         descricao="Personal trainers da região e o Balcão de Demandas ficam disponíveis assinando o plano PF."
-        minimo="base"
+        nomePlano={nomeNivelPF("base")}
       />
     );
   }

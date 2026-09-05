@@ -1,6 +1,6 @@
 import PainelChatProntim from "@/components/app/PainelChatProntim";
 import TelaBloqueada from "@/components/app/TelaBloqueada";
-import { nivelAtende, nivelPF } from "@/lib/assinaturas";
+import { nivelAtende, nivelPF, nomeNivelPF } from "@/lib/assinaturas";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function ProntimPage() {
@@ -15,7 +15,7 @@ export default async function ProntimPage() {
       <TelaBloqueada
         titulo="Chat com o Prontim"
         descricao="Converse com o Prontim direto no portal assinando o plano PF."
-        minimo="base"
+        nomePlano={nomeNivelPF("base")}
       />
     );
   }
