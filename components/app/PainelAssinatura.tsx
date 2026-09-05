@@ -62,6 +62,29 @@ export default function PainelAssinatura({
     setCarregando(false);
   }
 
+  async function sincronizar() {
+    setCarregando(true);
+    setErro("");
+    try {
+      const resposta = await fetch("/api/asaas/sincronizar", { method: "POST" });
+      const dados = await resposta.json();
+      if (!resposta.ok) {
+        setErro(dados.erro || "Não consegui checar agora.");
+        setCarregando(false);
+        return;
+      }
+      if (dados.status === "pendente") {
+        setErro("Ainda não achei o pagamento confirmado no Asaas. Tenta de novo em um instante.");
+        setCarregando(false);
+        return;
+      }
+      window.location.reload();
+    } catch {
+      setErro("Não consegui checar agora. Tenta de novo.");
+      setCarregando(false);
+    }
+  }
+
   async function cancelar() {
     setCarregando(true);
     setErro("");
@@ -88,9 +111,15 @@ export default function PainelAssinatura({
           <span className="font-semibold text-tinta">{rotuloStatus(assinatura.status)}</span>
         </div>
         {assinatura.status === "pendente" && (
-          <p className="text-xs text-tinta-suave">
-            Assim que o Pix cair, sua assinatura fica ativa automaticamente.
-          </p>
+          <>
+            <p className="text-xs text-tinta-suave">
+              Assim que o Pix cair, sua assinatura fica ativa automaticamente. Se já pagou e não
+              atualizou, clica abaixo pra checar direto com o Asaas.
+            </p>
+            <Botao type="button" variante="secundario" disabled={carregando} onClick={sincronizar}>
+              {carregando ? "Checando..." : "Já paguei — verificar agora"}
+            </Botao>
+          </>
         )}
         {assinatura.status === "inadimplente" && (
           <p className="text-xs text-terracota-escuro">

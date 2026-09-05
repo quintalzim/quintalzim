@@ -113,3 +113,22 @@ export async function buscarPrimeiraCobranca(subscriptionId: string): Promise<As
   if (!ok || !dados?.data?.length) return null;
   return dados.data[0];
 }
+
+const STATUS_PAGO = ["RECEIVED", "CONFIRMED", "RECEIVED_IN_CASH"];
+
+// Fallback manual pro caso do webhook não ter entregado (ex: não configurado
+// a tempo, erro de rede, etc). Busca todas as cobranças da assinatura e
+// decide o status mais recente/relevante — não depende do Asaas ter avisado
+// a gente sozinho.
+export async function sincronizarStatusAssinatura(
+  subscriptionId: string
+): Promise<"ativa" | "inadimplente" | "pendente"> {
+  const { ok, dados } = await chamarAsaas<{ data: { status: string }[] }>(
+    `/payments?subscription=${subscriptionId}&limit=20`
+  );
+  if (!ok || !dados?.data?.length) return "pendente";
+
+  if (dados.data.some((p) => STATUS_PAGO.includes(p.status))) return "ativa";
+  if (dados.data.some((p) => p.status === "OVERDUE")) return "inadimplente";
+  return "pendente";
+}
