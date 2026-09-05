@@ -72,6 +72,16 @@ export default function FormularioPedirCatalogo({
 
     const nomeCliente = (user.user_metadata?.name as string | undefined)?.trim() || "";
 
+    await supabase.from("empresa_clientes").upsert(
+      {
+        empresa_id: empresaId,
+        profile_id: user.id,
+        nome: nomeCliente,
+        telefone: perfil?.phone ?? null,
+      },
+      { onConflict: "empresa_id,profile_id" }
+    );
+
     const { error } = await supabase.from("pedidos_catalogo").insert({
       empresa_id: empresaId,
       produto_id: selecionado.id,
@@ -97,6 +107,7 @@ export default function FormularioPedirCatalogo({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           profileId: ownerId,
+          empresaId,
           titulo: `Novo pedido — ${empresaNome}`,
           corpo: `${nomeCliente || "Alguém"} quer ${qtd}x ${selecionado.nome}. Confirma no painel.`,
           url: "/app/empresa",

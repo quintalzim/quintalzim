@@ -52,6 +52,7 @@ export default function PainelPedidosCatalogo({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           profileId: pedido.cliente_profile_id,
+          pedidoCatalogoId: pedido.id,
           titulo:
             novoStatus === "confirmado"
               ? `${empresaNome} confirmou teu pedido`

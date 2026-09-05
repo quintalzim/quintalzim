@@ -85,6 +85,7 @@ export default function FormularioSolicitarAgendamento({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           profileId: ownerId,
+          empresaId,
           titulo: `Novo pedido de horário — ${empresaNome}`,
           corpo: `${nomeCliente || "Alguém"} quer ${servico.trim()}. Confirma no painel.`,
           url: "/app/empresa",

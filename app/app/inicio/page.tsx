@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
 import { clienteAdmin } from "@/lib/push-servidor";
@@ -70,6 +71,12 @@ export default async function InicioPage() {
               </li>
             ))}
           </ul>
+          <Link
+            href="/marketplace/personal-trainer"
+            className="pt-1 font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+          >
+            Encontrar um personal trainer perto de você →
+          </Link>
         </Card>
       )}
 

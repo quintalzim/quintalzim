@@ -69,6 +69,22 @@ export default function CatalogoPage() {
           </Link>
         </Card>
 
+        <Card className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-tinta">Marketplace 🤝</h2>
+            <Selo variante="verde">Ativo</Selo>
+          </div>
+          <p className="text-sm text-tinta-suave">
+            Personal trainers da região e o Balcão de Demandas — peça ajuda ou ofereça a sua.
+          </p>
+          <Link
+            href="/marketplace"
+            className="mt-1 font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+          >
+            Abrir Marketplace →
+          </Link>
+        </Card>
+
         {emBreve.map((item) => (
           <Card key={item.titulo} className="flex flex-col gap-2 opacity-70">
             <div className="flex items-center justify-between">
