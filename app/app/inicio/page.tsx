@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { APPS_CATALOGO } from "@/lib/apps-catalogo";
 import Varal from "@/components/landing/Varal";
 import Botao from "@/components/ui/Botao";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
-import { nivelPF } from "@/lib/assinaturas";
+import { nivelAtende, nivelPF } from "@/lib/assinaturas";
 import { clienteAdmin } from "@/lib/push-servidor";
 import { buscarPlanoHabitos } from "@/lib/quiz/plano-habitos";
 import { createClient } from "@/lib/supabase/server";
@@ -53,6 +54,12 @@ export default async function InicioPage() {
   const comprasAbertas = (itensAbertos ?? []).filter((i) => i.tipo === "compra");
 
   const nivel = user ? await nivelPF(supabase, user.id) : "nenhum";
+
+  const { data: perfilFavoritos } = user
+    ? await supabase.from("profiles").select("apps_favoritos").eq("id", user.id).maybeSingle()
+    : { data: null };
+  const idsFavoritos: string[] = perfilFavoritos?.apps_favoritos ?? [];
+  const appsFavoritos = APPS_CATALOGO.filter((app) => idsFavoritos.includes(app.id));
 
   if (nivel === "nenhum") {
     return (
@@ -195,12 +202,40 @@ export default async function InicioPage() {
         </Card>
       )}
 
-      <Card className="flex flex-col gap-2">
-        <Selo variante="verde">Em breve</Selo>
+      <Card className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <Selo variante="verde">Favoritos</Selo>
+          <Link
+            href="/app/catalogo"
+            className="font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+          >
+            {appsFavoritos.length > 0 ? "Editar →" : "Escolher →"}
+          </Link>
+        </div>
         <h2 className="text-lg font-bold text-tinta">Seus mini-apps favoritos</h2>
-        <p className="text-sm text-tinta-suave">
-          Acesso rápido para o que você mais usa no Quintalzim.
-        </p>
+        {appsFavoritos.length > 0 ? (
+          <div className="grid grid-cols-2 gap-2">
+            {appsFavoritos.map((app) => {
+              const liberado = !app.minimoPF || nivelAtende(nivel, app.minimoPF);
+              return (
+                <Link
+                  key={app.id}
+                  href={liberado ? app.href : "/app/para-voce"}
+                  className="flex items-center gap-2 rounded-lg bg-papel-2 px-3 py-2 text-sm font-semibold text-tinta"
+                >
+                  <span>{app.icone}</span>
+                  <span className="truncate">{app.nome}</span>
+                  {!liberado && <span className="ml-auto text-xs">🔒</span>}
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-tinta-suave">
+            Marca a estrelinha ⭐ nos mini-apps que você mais usa lá no Catálogo, e eles aparecem
+            aqui como atalho.
+          </p>
+        )}
       </Card>
     </div>
   );

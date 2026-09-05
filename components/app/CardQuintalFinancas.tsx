@@ -10,7 +10,13 @@ import { createClient } from "@/lib/supabase/client";
 
 const URL_FINANCAS = "https://financas.quintalzim.com.br";
 
-export default function CardQuintalFinancas({ bloqueado = false }: { bloqueado?: boolean }) {
+export default function CardQuintalFinancas({
+  bloqueado = false,
+  favorito,
+}: {
+  bloqueado?: boolean;
+  favorito?: React.ReactNode;
+}) {
   const router = useRouter();
   const supabase = createClient();
   const [abrindo, setAbrindo] = useState(false);
@@ -20,7 +26,10 @@ export default function CardQuintalFinancas({ bloqueado = false }: { bloqueado?:
       <Card className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-tinta">Quintal de Finanças 🌱</h2>
-          <Selo variante="terracota">Base</Selo>
+          <div className="flex items-center gap-2">
+            {favorito}
+            <Selo variante="terracota">Base</Selo>
+          </div>
         </div>
         <p className="text-sm text-tinta-suave">Suas contas em ordem sem complicação</p>
         <Link
@@ -60,7 +69,10 @@ export default function CardQuintalFinancas({ bloqueado = false }: { bloqueado?:
 
   return (
     <Card className="flex flex-col gap-2">
-      <h2 className="text-lg font-bold text-tinta">Quintal de Finanças 🌱</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-tinta">Quintal de Finanças 🌱</h2>
+        {favorito}
+      </div>
       <p className="text-sm text-tinta-suave">Suas contas em ordem sem complicação</p>
       <Botao onClick={handleAbrir} disabled={abrindo} className="mt-2">
         {abrindo ? "Abrindo..." : "Abrir"}
