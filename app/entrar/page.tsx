@@ -19,8 +19,9 @@ function EntrarConteudo() {
   const supabase = createClient();
 
   const avisoLinkInvalido = searchParams.get("erro") === "link-invalido";
+  const abaInicial: Aba = searchParams.get("aba") === "criar" ? "criar" : "entrar";
 
-  const [aba, setAba] = useState<Aba>("entrar");
+  const [aba, setAba] = useState<Aba>(abaInicial);
   const [modo, setModo] = useState<Modo>("padrao");
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");

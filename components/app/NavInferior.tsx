@@ -46,6 +46,20 @@ const itens: { href: string; rotulo: string; icone: ReactNode }[] = [
     ),
   },
   {
+    href: "/app/empresa",
+    rotulo: "Empresa",
+    icone: (
+      <svg viewBox="0 0 24 24" fill="none" strokeWidth={2} className="h-6 w-6">
+        <path
+          d="M4 21V9l8-5 8 5v12M4 21h16M9 21v-6h6v6"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
+  {
     href: "/app/perfil",
     rotulo: "Perfil",
     icone: (

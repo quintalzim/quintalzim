@@ -1,7 +1,21 @@
-import Card from "@/components/ui/Card";
-import Selo from "@/components/ui/Selo";
+import PainelChatProntim from "@/components/app/PainelChatProntim";
+import { createClient } from "@/lib/supabase/server";
 
-export default function ProntimPage() {
+export default async function ProntimPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: historico } = user
+    ? await supabase
+        .from("mensagens_prontim_web")
+        .select("id, autor, texto")
+        .eq("profile_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(50)
+    : { data: [] };
+
   return (
     <div className="mx-auto flex max-w-md flex-col gap-5">
       <div>
@@ -9,14 +23,7 @@ export default function ProntimPage() {
         <p className="text-tinta-suave">Seu concierge, sempre por perto.</p>
       </div>
 
-      <Card className="flex flex-col items-center gap-3 text-center">
-        <Selo variante="amarelo">Em breve</Selo>
-        <h2 className="text-lg font-bold text-tinta">O chat com o Prontim já já chega</h2>
-        <p className="text-sm text-tinta-suave">
-          Pode perguntar qualquer coisa sobre o Quintalzim que ele te ajuda,
-          do jeito simples do interior.
-        </p>
-      </Card>
+      <PainelChatProntim historicoInicial={historico ?? []} />
     </div>
   );
 }
