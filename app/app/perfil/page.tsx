@@ -4,6 +4,7 @@ import BotaoSairQuintal from "@/components/app/BotaoSairQuintal";
 import FormularioAlterarSenha from "@/components/app/FormularioAlterarSenha";
 import FormularioEditarNome from "@/components/app/FormularioEditarNome";
 import FormularioEditarTelefone from "@/components/app/FormularioEditarTelefone";
+import PainelAssinatura from "@/components/app/PainelAssinatura";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
 import { createClient } from "@/lib/supabase/server";
@@ -17,14 +18,20 @@ export default async function PerfilPage() {
   const nome = (user?.user_metadata?.name as string | undefined)?.trim() || "";
 
   let telefone = "";
+  let cpf = "";
   if (user) {
     const { data: perfil } = await supabase
       .from("profiles")
-      .select("phone")
+      .select("phone, cpf")
       .eq("id", user.id)
       .single();
     telefone = perfil?.phone ?? "";
+    cpf = perfil?.cpf ?? "";
   }
+
+  const { data: assinatura } = user
+    ? await supabase.from("assinaturas").select("status, plano").eq("profile_id", user.id).maybeSingle()
+    : { data: null };
 
   const { data: empresa } = user
     ? await supabase.from("empresas").select("nome, slug").eq("owner_id", user.id).maybeSingle()
@@ -96,12 +103,9 @@ export default async function PerfilPage() {
         </Card>
       )}
 
-      <Card className="flex flex-col gap-2">
-        <Selo variante="terracota">Em breve</Selo>
-        <h2 className="text-lg font-bold text-tinta">Minha assinatura</h2>
-        <p className="text-sm text-tinta-suave">
-          Plano, cobrança e histórico de pagamentos.
-        </p>
+      <Card className="flex flex-col gap-3">
+        <Selo variante="verde">Minha assinatura</Selo>
+        <PainelAssinatura assinatura={assinatura ?? null} cpfAtual={cpf} />
       </Card>
 
       <BotaoSairQuintal />
