@@ -1,6 +1,6 @@
 # QUINTALZIM — Documento de Contexto do Projeto
 
-*Versão 1.22 — setembro/2026. Este documento dá contexto completo a qualquer nova conversa. Atualizar ao fim de sessões que mudem decisões, arquitetura ou estado.*
+*Versão 1.23 — setembro/2026. Este documento dá contexto completo a qualquer nova conversa. Atualizar ao fim de sessões que mudem decisões, arquitetura ou estado.*
 
 *Mudanças da v1.1: separação formal dos dois modelos de negócio (B2C direto e B2B2C), arquitetura de WhatsApp definida (número próprio do Quintalzim vs número de cada Empresa via Coexistence/Embedded Signup), "Plano B" de onboarding sem WhatsApp (cadastro direto no ecossistema via PWA), e mudança de precificação da Meta anunciada para 1/out/2026.*
 
@@ -323,6 +323,8 @@ O branch de **Calorias por Foto**, no próprio "Prontim - Atendimento" (`N9EOkEY
   - `app/app/catalogo/page.tsx`: o card único "Marketplace" virou dois cards lado a lado — "Marketplace 🤝" (só diretórios de profissionais) e "Balcão de Demandas 📋" (pedir/oferecer ajuda pontual, link direto pra `/marketplace/demandas`), cada um com sua própria estrela de favorito e badge de Ativo/Base.
   - `app/marketplace/page.tsx`: o CTA final virou um `Botao` de verdade (variante primário) dentro de um Card com fundo destacado (`bg-verde/5`), em vez de link sublinhado — agora é visualmente a ação principal da página.
   - `npx tsc --noEmit` limpo. Commit `52598e6`.
+
+- **"Voltar pro app" nas páginas públicas do Marketplace, pra assinante logado (05/set)** — usuário notou que, navegando pelas 3 páginas públicas do Marketplace (`/marketplace`, `/marketplace/[categoria]`, `/marketplace/demandas`) já logado, o único jeito de sair era o link "Quintalzim" no topo, que leva pra página inicial pública, não pro app. Essas páginas continuam 100% públicas por decisão de produto (são a vitrine que atrai gente de fora) — a mudança foi só de UX pra quem já é assinante: as 3 páginas passaram a checar `auth.getUser()` e, se logado, mostram um link "Voltar pro app →" pra `/app/inicio` no topo, ao lado do link existente. Os CTAs de rodapé também ficaram cientes do login — quem já é assinante vê "Ir pro Marketplace no app →" / "Cria teu perfil no app →" em vez do convite genérico "Entra no Quintalzim", que só fazia sentido pra visitante anônimo. `npx tsc --noEmit` limpo. Commit `5a90bfc`.
 
 **Comando de teste padrão (simula mensagem chegando):**
 ```bash
