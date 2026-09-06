@@ -1,18 +1,48 @@
 import Link from "next/link";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
+import { ehSuperadmin } from "@/lib/admin/auth";
+import { clienteAdmin } from "@/lib/push-servidor";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function DiretorioPersonalTrainerPage() {
   const supabase = await createClient();
 
-  const { data: profissionais } = await supabase
+  const { data: profissionaisBrutos } = await supabase
     .from("profissionais_marketplace")
-    .select("id, nome, descricao, cidade, contato, instagram, verificado")
+    .select("id, profile_id, nome, descricao, cidade, contato, instagram, verificado")
     .eq("categoria", "personal_trainer")
     .eq("ativo", true)
     .order("verificado", { ascending: false })
     .order("created_at", { ascending: false });
+
+  // Filtro retroativo (05/set): virar Profissional exige PF Premium (ver
+  // docs/quintalzim-contexto-projeto.md), mas a página de perfil não
+  // desativa automaticamente quem dá downgrade — o `ativo=true` sozinho não
+  // reflete mais assinatura em dia. Checa aqui, via service role (a query
+  // roda no servidor; nenhum dado de assinatura é exposto ao público, só
+  // decide quem entra na lista).
+  let profissionais = profissionaisBrutos ?? [];
+  const admin = clienteAdmin();
+  if (admin && profissionais.length > 0) {
+    const profileIds = profissionais.map((p) => p.profile_id);
+    const [{ data: perfis }, { data: assinaturasPf }] = await Promise.all([
+      admin.from("profiles").select("id, role").in("id", profileIds),
+      admin
+        .from("assinaturas")
+        .select("profile_id, plano, status")
+        .in("profile_id", profileIds)
+        .eq("categoria", "pf")
+        .eq("status", "ativa"),
+    ]);
+    const superadmins = new Set((perfis ?? []).filter((p) => ehSuperadmin(p.role)).map((p) => p.id));
+    const premiumAtivos = new Set(
+      (assinaturasPf ?? []).filter((a) => a.plano === "pf_premium").map((a) => a.profile_id)
+    );
+    profissionais = profissionais.filter(
+      (p) => superadmins.has(p.profile_id) || premiumAtivos.has(p.profile_id)
+    );
+  }
 
   return (
     <div className="flex flex-1 justify-center bg-papel px-6 py-16">
