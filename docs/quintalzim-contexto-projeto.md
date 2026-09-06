@@ -1,6 +1,6 @@
 # QUINTALZIM — Documento de Contexto do Projeto
 
-*Versão 1.21 — setembro/2026. Este documento dá contexto completo a qualquer nova conversa. Atualizar ao fim de sessões que mudem decisões, arquitetura ou estado.*
+*Versão 1.22 — setembro/2026. Este documento dá contexto completo a qualquer nova conversa. Atualizar ao fim de sessões que mudem decisões, arquitetura ou estado.*
 
 *Mudanças da v1.1: separação formal dos dois modelos de negócio (B2C direto e B2B2C), arquitetura de WhatsApp definida (número próprio do Quintalzim vs número de cada Empresa via Coexistence/Embedded Signup), "Plano B" de onboarding sem WhatsApp (cadastro direto no ecossistema via PWA), e mudança de precificação da Meta anunciada para 1/out/2026.*
 
@@ -318,6 +318,12 @@ O branch de **Calorias por Foto**, no próprio "Prontim - Atendimento" (`N9EOkEY
   - Copy ajustada em `/app/marketplace`, `/app/para-voce` e `/app/admin` pra parar de falar só de Personal Trainer, sem prometer categorias que ainda não existem.
   - `npx tsc --noEmit` limpo. Commit `aaa21d4`.
 
+- **SQL validado + 2 ajustes de destaque no Marketplace, por feedback do usuário (05/set)** — usuário rodou `docs/sql/categorias-servico.sql` e confirmou o processo validado (pendência 17 fechada). Ao testar, encontrou dois pontos de UX escondidos demais: (1) o Balcão de Demandas só existia como um link dentro do card "Marketplace" no Catálogo, sem destaque próprio; (2) na página pública `/marketplace`, o CTA "Entra no Quintalzim" (o convite pra virar assinante/publicar perfil) era um link de texto sublinhado discreto no rodapé, fácil de não notar. Corrigido:
+  - `lib/apps-catalogo.ts` ganhou o `AppId` `"balcao-demandas"` (ícone 📋, href `/marketplace/demandas`, mínimo PF Base) — passa a ser favoritável e a aparecer como atalho próprio em `/app/inicio`, igual aos outros 5 mini-apps.
+  - `app/app/catalogo/page.tsx`: o card único "Marketplace" virou dois cards lado a lado — "Marketplace 🤝" (só diretórios de profissionais) e "Balcão de Demandas 📋" (pedir/oferecer ajuda pontual, link direto pra `/marketplace/demandas`), cada um com sua própria estrela de favorito e badge de Ativo/Base.
+  - `app/marketplace/page.tsx`: o CTA final virou um `Botao` de verdade (variante primário) dentro de um Card com fundo destacado (`bg-verde/5`), em vez de link sublinhado — agora é visualmente a ação principal da página.
+  - `npx tsc --noEmit` limpo. Commit `52598e6`.
+
 **Comando de teste padrão (simula mensagem chegando):**
 ```bash
 curl -X POST https://n8n.quintalzim.com.br/webhook/prontim \
@@ -347,7 +353,7 @@ curl -X POST https://n8n.quintalzim.com.br/webhook/prontim \
 14. Redesenho visual das telas reais do app (Início, Empresa, Catálogo, Perfil, Marketplace) — **decisão do usuário: não vai fazer.** Encerrado, não é mais um item em aberto.
 15. Comissões de marketplace (Fase 2) — **decisão do usuário: não fazer agora.** Fica só registrado no roadmap (seção 8), sem trabalho em andamento.
 16. Split de pagamento na origem via subcontas Asaas (Fase 2) — **decisão do usuário: não fazer agora.** Mesma situação: registrado, sem trabalho em andamento. Isso também define o desenho do Clube de Assinaturas (item 17, seção 6): sem split pronto, o dinheiro do clube não pode passar pela conta Asaas mestre do Quintalzim.
-17. **`docs/sql/categorias-servico.sql` a rodar (05/set)** — script da generalização do Marketplace (categorias de serviço administráveis, ver seção 3/6) ainda não foi executado no Supabase. Até rodar, o código novo (categoria_id FK, seletor de categoria no formulário, admin de categorias) vai quebrar em produção — é pré-requisito bloqueante pro deploy dessa leva, igual todo script SQL anterior.
+17. ~~`docs/sql/categorias-servico.sql` a rodar~~ — **feito, rodado e processo validado pelo usuário (05/set).**
 
 ---
 
