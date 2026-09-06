@@ -45,9 +45,19 @@ export default async function BalcaoDeDemandasPage() {
     <div className="flex flex-1 justify-center bg-papel px-6 py-16">
       <div className="flex w-full max-w-2xl flex-col gap-6">
         <div>
-          <Link href="/marketplace" className="font-titulo text-sm font-semibold text-verde-escuro">
-            ← Marketplace
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link href="/marketplace" className="font-titulo text-sm font-semibold text-verde-escuro">
+              ← Marketplace
+            </Link>
+            {user && (
+              <Link
+                href="/app/inicio"
+                className="font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+              >
+                Voltar pro app →
+              </Link>
+            )}
+          </div>
           <h1 className="mt-2 text-2xl font-extrabold text-tinta">Balcão de Demandas</h1>
           <p className="mt-1 text-sm text-tinta-suave">
             Pedidos pontuais de gente da região. Se você pode ajudar, manifesta interesse.

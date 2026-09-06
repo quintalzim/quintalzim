@@ -11,15 +11,29 @@ import { createClient } from "@/lib/supabase/server";
 // sem precisar mexer em código (docs/quintalzim-contexto-projeto.md, seção 3).
 export default async function MarketplacePage() {
   const supabase = await createClient();
-  const categorias = await listarCategoriasAtivas(supabase);
+  const [{ data: { user } }, categorias] = await Promise.all([
+    supabase.auth.getUser(),
+    listarCategoriasAtivas(supabase),
+  ]);
+  const usuarioLogado = Boolean(user);
 
   return (
     <div className="flex flex-1 justify-center bg-papel px-6 py-16">
       <div className="flex w-full max-w-2xl flex-col gap-6">
         <div>
-          <Link href="/" className="font-titulo text-sm font-semibold text-verde-escuro">
-            Quintalzim
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link href="/" className="font-titulo text-sm font-semibold text-verde-escuro">
+              Quintalzim
+            </Link>
+            {usuarioLogado && (
+              <Link
+                href="/app/inicio"
+                className="font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+              >
+                ← Voltar pro app
+              </Link>
+            )}
+          </div>
           <h1 className="mt-2 text-2xl font-extrabold text-tinta">Marketplace</h1>
           <p className="mt-1 text-sm text-tinta-suave">
             A ponte entre quem precisa e quem oferece, aqui na tua região.
@@ -59,11 +73,13 @@ export default async function MarketplacePage() {
 
         <Card className="flex flex-col items-center gap-3 bg-verde/5 text-center">
           <p className="text-base font-semibold text-tinta">
-            É profissional e quer aparecer no Marketplace, ou tem algo pontual pra resolver?
+            {usuarioLogado
+              ? "Quer criar teu perfil de profissional ou publicar uma demanda?"
+              : "É profissional e quer aparecer no Marketplace, ou tem algo pontual pra resolver?"}
           </p>
           <Link href="/app/marketplace" className="w-full sm:w-auto">
             <Botao type="button" className="w-full sm:w-auto">
-              Entrar no Quintalzim →
+              {usuarioLogado ? "Ir pro Marketplace no app →" : "Entrar no Quintalzim →"}
             </Botao>
           </Link>
         </Card>

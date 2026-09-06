@@ -20,6 +20,11 @@ export default async function DiretorioCategoriaPage({
   const { categoria: slug } = await params;
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const usuarioLogado = Boolean(user);
+
   const categoria = await buscarCategoriaPorSlug(supabase, slug);
   if (!categoria) notFound();
 
@@ -63,9 +68,19 @@ export default async function DiretorioCategoriaPage({
     <div className="flex flex-1 justify-center bg-papel px-6 py-16">
       <div className="flex w-full max-w-2xl flex-col gap-6">
         <div>
-          <Link href="/marketplace" className="font-titulo text-sm font-semibold text-verde-escuro">
-            ← Marketplace
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link href="/marketplace" className="font-titulo text-sm font-semibold text-verde-escuro">
+              ← Marketplace
+            </Link>
+            {usuarioLogado && (
+              <Link
+                href="/app/inicio"
+                className="font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+              >
+                Voltar pro app →
+              </Link>
+            )}
+          </div>
           <h1 className="mt-2 text-2xl font-extrabold text-tinta">
             {categoria.emoji ? `${categoria.emoji} ` : ""}
             {categoria.nome}
@@ -102,13 +117,15 @@ export default async function DiretorioCategoriaPage({
 
         <Card className="flex flex-col gap-2">
           <p className="text-sm text-tinta-suave">
-            Atua com {categoria.nome.toLowerCase()} e quer aparecer aqui?
+            {usuarioLogado
+              ? `Atua com ${categoria.nome.toLowerCase()}?`
+              : `Atua com ${categoria.nome.toLowerCase()} e quer aparecer aqui?`}
           </p>
           <Link
             href="/app/marketplace"
             className="font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
           >
-            Entra no Quintalzim e cria teu perfil →
+            {usuarioLogado ? "Cria teu perfil no app →" : "Entra no Quintalzim e cria teu perfil →"}
           </Link>
         </Card>
       </div>
