@@ -25,8 +25,8 @@ export async function POST(request: NextRequest) {
 
   // Casa pelo asaas_subscription_id, não pelo customer: desde que a escada de
   // planos ficou completa, um mesmo cliente Asaas (mesmo CPF) pode ter várias
-  // assinaturas nossas ao mesmo tempo (PF + Empresa + Profissional), cada
-  // uma com seu próprio subscription id.
+  // assinaturas nossas ao mesmo tempo (PF + Empresa), cada uma com seu
+  // próprio subscription id.
   if (!evento || !payment?.subscription) {
     return NextResponse.json({ ok: true }); // evento que não precisamos tratar
   }

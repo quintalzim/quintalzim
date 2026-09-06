@@ -29,7 +29,7 @@ const RECURSOS = [
   {
     emoji: "🤝",
     titulo: "Marketplace",
-    texto: "Personal trainers da região e o Balcão de Demandas pra pedir ou oferecer ajuda.",
+    texto: "Balcão de Demandas pra pedir ajuda pontual ou topar ajudar alguém, e o diretório de Personal Trainers da região.",
     minimo: "base" as const,
   },
   {
@@ -43,6 +43,13 @@ const RECURSOS = [
     titulo: "Prontim no WhatsApp",
     texto:
       "Registra despesa falando ou escrevendo, manda foto do prato pra saber as calorias, organiza tarefa e compra por lá — tudo direto no zap.",
+    minimo: "premium" as const,
+  },
+  {
+    emoji: "⭐",
+    titulo: "Virar Profissional no Marketplace",
+    texto:
+      "Cria teu perfil público no diretório de Personal Trainers e apareça na recomendação da IA no plano de hábitos do Quiz-Funil.",
     minimo: "premium" as const,
   },
 ] satisfies { emoji: string; titulo: string; texto: string; minimo: "base" | "premium" }[];

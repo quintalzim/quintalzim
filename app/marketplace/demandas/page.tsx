@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ListaDemandas from "@/components/public/ListaDemandas";
+import { nivelAtende, nivelPF } from "@/lib/assinaturas";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function BalcaoDeDemandasPage() {
@@ -24,6 +25,9 @@ export default async function BalcaoDeDemandasPage() {
     demandasComInteresse = (interesses ?? []).map((i) => i.demanda_id);
   }
 
+  const nivel = user ? await nivelPF(supabase, user.id) : "nenhum";
+  const temPF = nivelAtende(nivel, "base");
+
   return (
     <div className="flex flex-1 justify-center bg-papel px-6 py-16">
       <div className="flex w-full max-w-2xl flex-col gap-6">
@@ -40,6 +44,7 @@ export default async function BalcaoDeDemandasPage() {
         <ListaDemandas
           demandas={demandas ?? []}
           usuarioLogado={Boolean(user)}
+          temPF={temPF}
           demandasComInteresse={demandasComInteresse}
         />
 

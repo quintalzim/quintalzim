@@ -1,8 +1,15 @@
 // Escada de preços do Quintalzim (docs/quintalzim-contexto-projeto.md, seção
 // 2). Fonte única de verdade pra valor + categoria de cada plano — usado nas
 // rotas /api/asaas/* e nos painéis de assinatura do portal.
+//
+// Categoria 'profissional' removida (05/set) por decisão do usuário: virar
+// Profissional no Marketplace deixou de ter assinatura própria e passou a
+// ser um benefício do PF Premium (ver app/app/marketplace/page.tsx). Linhas
+// antigas em `assinaturas` com categoria='profissional' ficam órfãs no banco
+// (nenhuma tela do portal lê mais essa categoria) — inofensivo, não precisou
+// de migração de limpeza.
 
-export type CategoriaPlano = "pf" | "empresa" | "profissional";
+export type CategoriaPlano = "pf" | "empresa";
 
 export type Plano = {
   id: string;
@@ -25,7 +32,7 @@ export const PLANOS: Record<string, Plano> = {
     nome: "PF Premium",
     valor: 39,
     categoria: "pf",
-    descricao: "Acompanhamento ativo via WhatsApp.",
+    descricao: "Acompanhamento ativo via WhatsApp e perfil no Marketplace de profissionais.",
   },
   empresa_start: {
     id: "empresa_start",
@@ -47,13 +54,6 @@ export const PLANOS: Record<string, Plano> = {
     valor: 99,
     categoria: "empresa",
     descricao: "+ vendas, despesas, DRE, clube de assinaturas.",
-  },
-  profissional: {
-    id: "profissional",
-    nome: "Profissional",
-    valor: 29,
-    categoria: "profissional",
-    descricao: "Perfil no marketplace + recomendação da IA.",
   },
 };
 

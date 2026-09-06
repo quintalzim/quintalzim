@@ -23,10 +23,12 @@ function formatarReais(valor: number | null): string {
 export default function ListaDemandas({
   demandas,
   usuarioLogado,
+  temPF,
   demandasComInteresse,
 }: {
   demandas: Demanda[];
   usuarioLogado: boolean;
+  temPF: boolean;
   demandasComInteresse: string[];
 }) {
   const supabase = createClient();
@@ -114,7 +116,16 @@ export default function ListaDemandas({
             {demanda.prazo && <span>🕒 {demanda.prazo}</span>}
           </div>
 
-          {usuarioLogado ? (
+          {!usuarioLogado ? (
+            <p className="text-xs text-tinta-suave">Entra na tua conta pra manifestar interesse.</p>
+          ) : !temPF ? (
+            <p className="text-xs text-tinta-suave">
+              Assina o plano PF pra poder ajudar nessa demanda.{" "}
+              <a href="/app/para-voce" className="font-semibold text-verde-escuro underline underline-offset-2">
+                Ver planos →
+              </a>
+            </p>
+          ) : (
             <Botao
               type="button"
               variante={interessadas.has(demanda.id) ? "secundario" : "primario"}
@@ -128,8 +139,6 @@ export default function ListaDemandas({
                   ? "Enviando..."
                   : "Tenho interesse"}
             </Botao>
-          ) : (
-            <p className="text-xs text-tinta-suave">Entra na tua conta pra manifestar interesse.</p>
           )}
         </Card>
       ))}

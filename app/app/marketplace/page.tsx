@@ -1,13 +1,11 @@
 import Link from "next/link";
 import FormularioNovaDemanda from "@/components/app/FormularioNovaDemanda";
 import FormularioPerfilProfissional from "@/components/app/FormularioPerfilProfissional";
-import PainelAssinatura from "@/components/app/PainelAssinatura";
 import PainelMinhasDemandas from "@/components/app/PainelMinhasDemandas";
 import TelaBloqueada from "@/components/app/TelaBloqueada";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
 import { nivelAtende, nivelPF, nomeNivelPF } from "@/lib/assinaturas";
-import { planosPorCategoria } from "@/lib/planos";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function MarketplaceAppPage() {
@@ -35,19 +33,12 @@ export default async function MarketplaceAppPage() {
     );
   }
 
+  const temPremium = nivelAtende(nivel, "premium");
+
   const { data: perfil } = await supabase
     .from("profissionais_marketplace")
     .select("id, nome, descricao, cidade, contato, instagram, ativo, verificado")
     .eq("profile_id", user.id)
-    .maybeSingle();
-
-  const { data: perfilCpf } = await supabase.from("profiles").select("cpf").eq("id", user.id).maybeSingle();
-
-  const { data: assinaturaProfissional } = await supabase
-    .from("assinaturas")
-    .select("status, plano")
-    .eq("profile_id", user.id)
-    .eq("categoria", "profissional")
     .maybeSingle();
 
   const { data: minhasDemandas } = await supabase
@@ -72,28 +63,34 @@ export default async function MarketplaceAppPage() {
         </p>
       </div>
 
-      <Card className="flex flex-col gap-3">
-        <Selo variante="verde">Perfil profissional</Selo>
-        <p className="text-sm text-tinta-suave">
-          {perfil
-            ? "Edita as informações que aparecem no diretório público."
-            : "Ainda não tens um perfil. Cria pra aparecer no diretório de Personal Trainers."}
-        </p>
-        <FormularioPerfilProfissional profileId={user.id} perfilAtual={perfil ?? null} />
-      </Card>
-
-      <Card className="flex flex-col gap-3">
-        <Selo variante="verde">Assinatura Profissional</Selo>
-        <p className="text-sm text-tinta-suave">
-          Destaque no diretório e recomendação da IA no plano de hábitos do Quiz-Funil.
-        </p>
-        <PainelAssinatura
-          categoria="profissional"
-          planos={planosPorCategoria("profissional")}
-          assinatura={assinaturaProfissional ?? null}
-          cpfAtual={perfilCpf?.cpf ?? ""}
-        />
-      </Card>
+      {temPremium ? (
+        <Card className="flex flex-col gap-3">
+          <Selo variante="verde">Perfil profissional</Selo>
+          <p className="text-sm text-tinta-suave">
+            {perfil
+              ? "Edita as informações que aparecem no diretório público."
+              : "Ainda não tens um perfil. Cria pra aparecer no diretório de Personal Trainers."}
+          </p>
+          <FormularioPerfilProfissional profileId={user.id} perfilAtual={perfil ?? null} />
+        </Card>
+      ) : (
+        <Card className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-tinta">Perfil profissional</h2>
+            <Selo variante="terracota">{nomeNivelPF("premium")}</Selo>
+          </div>
+          <p className="text-sm text-tinta-suave">
+            Aparecer no diretório de Personal Trainers e receber recomendação da IA no plano de
+            hábitos do Quiz-Funil é um benefício do PF Premium.
+          </p>
+          <Link
+            href="/app/para-voce"
+            className="mt-1 font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+          >
+            Assinar pra desbloquear →
+          </Link>
+        </Card>
+      )}
 
       <Card className="flex flex-col gap-2">
         <p className="text-sm text-tinta-suave">Ver o diretório público:</p>
