@@ -1,8 +1,17 @@
 import Link from "next/link";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
+import { listarCategoriasAtivas } from "@/lib/categorias-servico";
+import { createClient } from "@/lib/supabase/server";
 
-export default function MarketplacePage() {
+// Hub público do Marketplace — até v1.20 tinha um único Card fixo pra
+// "Personal Trainers". A partir de v1.21 a listagem é dinâmica: qualquer
+// categoria de serviço cadastrada em /app/admin aparece aqui automaticamente,
+// sem precisar mexer em código (docs/quintalzim-contexto-projeto.md, seção 3).
+export default async function MarketplacePage() {
+  const supabase = await createClient();
+  const categorias = await listarCategoriasAtivas(supabase);
+
   return (
     <div className="flex flex-1 justify-center bg-papel px-6 py-16">
       <div className="flex w-full max-w-2xl flex-col gap-6">
@@ -17,17 +26,22 @@ export default function MarketplacePage() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Link href="/marketplace/personal-trainer">
-            <Card className="flex h-full flex-col gap-2 transition-transform hover:-translate-y-0.5">
-              <div className="flex items-center justify-between">
-                <h2 className="text-base font-bold text-tinta">Personal Trainers</h2>
-                <Selo variante="verde">Ativo</Selo>
-              </div>
-              <p className="text-sm text-tinta-suave">
-                Diretório de profissionais fitness pra te ajudar com o plano de hábitos.
-              </p>
-            </Card>
-          </Link>
+          {categorias.map((categoria) => (
+            <Link key={categoria.id} href={`/marketplace/${categoria.slug}`}>
+              <Card className="flex h-full flex-col gap-2 transition-transform hover:-translate-y-0.5">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-base font-bold text-tinta">
+                    {categoria.emoji ? `${categoria.emoji} ` : ""}
+                    {categoria.nome}
+                  </h2>
+                  <Selo variante="verde">Ativo</Selo>
+                </div>
+                <p className="text-sm text-tinta-suave">
+                  {categoria.descricao ?? `Profissionais de ${categoria.nome} da tua região.`}
+                </p>
+              </Card>
+            </Link>
+          ))}
 
           <Link href="/marketplace/demandas">
             <Card className="flex h-full flex-col gap-2 transition-transform hover:-translate-y-0.5">

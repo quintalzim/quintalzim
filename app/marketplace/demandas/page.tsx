@@ -10,11 +10,24 @@ export default async function BalcaoDeDemandasPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: demandas } = await supabase
+  const { data: demandasBrutas } = await supabase
     .from("demandas_marketplace")
-    .select("id, autor_profile_id, categoria, descricao, local, prazo, valor_oferecido")
+    .select(
+      "id, autor_profile_id, categoria, descricao, local, prazo, valor_oferecido, categorias_servico(nome)"
+    )
     .eq("status", "aberta")
     .order("created_at", { ascending: false });
+
+  // categoria virou FK opcional em v1.21 (categorias_servico) — a coluna
+  // texto antiga só sobrevive como fallback de exibição pra demandas que a
+  // IA classificou antes da mudança, ou que ela não conseguiu casar com
+  // nenhuma categoria cadastrada.
+  const demandas = (demandasBrutas ?? []).map((d) => {
+    const categoriaRelacionada = Array.isArray(d.categorias_servico)
+      ? d.categorias_servico[0]
+      : d.categorias_servico;
+    return { ...d, categoria: categoriaRelacionada?.nome ?? d.categoria };
+  });
 
   let demandasComInteresse: string[] = [];
   if (user) {

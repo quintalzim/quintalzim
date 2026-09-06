@@ -1,7 +1,9 @@
+import PainelCategoriasServico from "@/components/admin/PainelCategoriasServico";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
 import { ehSuperadmin } from "@/lib/admin/auth";
 import { buscarDadosAdmin } from "@/lib/admin/dashboard";
+import { listarTodasCategorias } from "@/lib/categorias-servico";
 import { clienteAdmin } from "@/lib/push-servidor";
 import { createClient } from "@/lib/supabase/server";
 
@@ -60,6 +62,7 @@ export default async function AdminPage() {
   }
 
   const dados = await buscarDadosAdmin(admin);
+  const categoriasServico = await listarTodasCategorias(admin);
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-5">
@@ -147,6 +150,16 @@ export default async function AdminPage() {
             ))}
           </div>
         )}
+      </Card>
+
+      <Card className="flex flex-col gap-3">
+        <Selo variante="verde">Marketplace — Categorias de Serviço</Selo>
+        <p className="text-sm text-tinta-suave">
+          Tipos de serviço disponíveis no diretório de profissionais e no Balcão de Demandas.
+          Desativar não apaga profissionais já cadastrados naquela categoria — só tira ela do
+          hub público e do formulário de cadastro.
+        </p>
+        <PainelCategoriasServico categoriasIniciais={categoriasServico} />
       </Card>
 
       <Card className="flex flex-col gap-3">

@@ -39,8 +39,8 @@ export default function FormularioNovaDemanda({ autorProfileId }: { autorProfile
       }
     }
 
-    let estruturado = {
-      categoria: categoria.trim() || null,
+    let estruturado: { categoriaId: string | null; local: string | null; prazo: string | null; valor: number | null } = {
+      categoriaId: null,
       local: local.trim() || null,
       prazo: prazo.trim() || null,
       valor: valorNumerico ?? null,
@@ -68,7 +68,7 @@ export default function FormularioNovaDemanda({ autorProfileId }: { autorProfile
     const { error } = await supabase.from("demandas_marketplace").insert({
       autor_profile_id: autorProfileId,
       descricao: descricao.trim(),
-      categoria: estruturado.categoria,
+      categoria_id: estruturado.categoriaId,
       local: estruturado.local,
       prazo: estruturado.prazo,
       valor_oferecido: estruturado.valor,

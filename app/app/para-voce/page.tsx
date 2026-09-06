@@ -29,7 +29,7 @@ const RECURSOS = [
   {
     emoji: "🤝",
     titulo: "Marketplace",
-    texto: "Balcão de Demandas pra pedir ajuda pontual ou topar ajudar alguém, e o diretório de Personal Trainers da região.",
+    texto: "Balcão de Demandas pra pedir ajuda pontual ou topar ajudar alguém, e diretórios de profissionais da região (personal trainer, pintor, pedreiro e outros).",
     minimo: "base" as const,
   },
   {
@@ -49,7 +49,7 @@ const RECURSOS = [
     emoji: "⭐",
     titulo: "Virar Profissional no Marketplace",
     texto:
-      "Cria teu perfil público no diretório de Personal Trainers e apareça na recomendação da IA no plano de hábitos do Quiz-Funil.",
+      "Cria teu perfil público no diretório da tua categoria de serviço e apareça na recomendação da IA no plano de hábitos do Quiz-Funil (se fores personal trainer).",
     minimo: "premium" as const,
   },
 ] satisfies { emoji: string; titulo: string; texto: string; minimo: "base" | "premium" }[];

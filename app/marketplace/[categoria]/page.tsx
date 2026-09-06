@@ -1,17 +1,32 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
 import { ehSuperadmin } from "@/lib/admin/auth";
+import { buscarCategoriaPorSlug } from "@/lib/categorias-servico";
 import { clienteAdmin } from "@/lib/push-servidor";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function DiretorioPersonalTrainerPage() {
+// Diretório público de profissionais, agora genérico por categoria
+// (docs/quintalzim-contexto-projeto.md, seção 3, v1.21) — substitui a antiga
+// rota fixa /marketplace/personal-trainer. O link do Quiz-Funil pra
+// "personal-trainer" (app/app/inicio/page.tsx) continua funcionando: o slug
+// virou só mais um valor de [categoria].
+export default async function DiretorioCategoriaPage({
+  params,
+}: {
+  params: Promise<{ categoria: string }>;
+}) {
+  const { categoria: slug } = await params;
   const supabase = await createClient();
+
+  const categoria = await buscarCategoriaPorSlug(supabase, slug);
+  if (!categoria) notFound();
 
   const { data: profissionaisBrutos } = await supabase
     .from("profissionais_marketplace")
     .select("id, profile_id, nome, descricao, cidade, contato, instagram, verificado")
-    .eq("categoria", "personal_trainer")
+    .eq("categoria_id", categoria.id)
     .eq("ativo", true)
     .order("verificado", { ascending: false })
     .order("created_at", { ascending: false });
@@ -51,17 +66,19 @@ export default async function DiretorioPersonalTrainerPage() {
           <Link href="/marketplace" className="font-titulo text-sm font-semibold text-verde-escuro">
             ← Marketplace
           </Link>
-          <h1 className="mt-2 text-2xl font-extrabold text-tinta">Personal Trainers</h1>
+          <h1 className="mt-2 text-2xl font-extrabold text-tinta">
+            {categoria.emoji ? `${categoria.emoji} ` : ""}
+            {categoria.nome}
+          </h1>
           <p className="mt-1 text-sm text-tinta-suave">
-            Profissionais da tua região prontos pra te ajudar a manter o plano de hábitos.
+            {categoria.descricao ?? `Profissionais de ${categoria.nome} da tua região.`}
           </p>
         </div>
 
         {(!profissionais || profissionais.length === 0) && (
           <Card className="flex flex-col gap-2">
             <p className="text-sm text-tinta-suave">
-              Ainda não tem ninguém cadastrado por aqui. Se você é personal trainer, seja o
-              primeiro.
+              Ainda não tem ninguém cadastrado por aqui. Se você atua nessa área, seja o primeiro.
             </p>
           </Card>
         )}
@@ -84,7 +101,9 @@ export default async function DiretorioPersonalTrainerPage() {
         </div>
 
         <Card className="flex flex-col gap-2">
-          <p className="text-sm text-tinta-suave">É personal trainer e quer aparecer aqui?</p>
+          <p className="text-sm text-tinta-suave">
+            Atua com {categoria.nome.toLowerCase()} e quer aparecer aqui?
+          </p>
           <Link
             href="/app/marketplace"
             className="font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"

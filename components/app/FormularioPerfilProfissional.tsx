@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import Botao from "@/components/ui/Botao";
 import Campo from "@/components/ui/Campo";
 import { aplicarMascaraTelefone, normalizarTelefone } from "@/lib/telefone";
+import type { CategoriaServico } from "@/lib/categorias-servico";
 import { createClient } from "@/lib/supabase/client";
 
 type Perfil = {
@@ -16,18 +17,22 @@ type Perfil = {
   instagram: string | null;
   ativo: boolean;
   verificado: boolean;
+  categoria_id: string | null;
 };
 
 export default function FormularioPerfilProfissional({
   profileId,
   perfilAtual,
+  categorias,
 }: {
   profileId: string;
   perfilAtual: Perfil | null;
+  categorias: CategoriaServico[];
 }) {
   const router = useRouter();
   const supabase = createClient();
 
+  const [categoriaId, setCategoriaId] = useState(perfilAtual?.categoria_id ?? categorias[0]?.id ?? "");
   const [nome, setNome] = useState(perfilAtual?.nome ?? "");
   const [descricao, setDescricao] = useState(perfilAtual?.descricao ?? "");
   const [cidade, setCidade] = useState(perfilAtual?.cidade ?? "");
@@ -50,6 +55,11 @@ export default function FormularioPerfilProfissional({
       return;
     }
 
+    if (!categoriaId) {
+      setMensagemErro("Escolhe o tipo de serviço que você oferece.");
+      return;
+    }
+
     if (contato.trim() && !normalizarTelefone(contato)) {
       setMensagemErro("WhatsApp inválido. Confere o DDD e o número (com o 9 na frente).");
       return;
@@ -64,6 +74,7 @@ export default function FormularioPerfilProfissional({
       contato: contato.trim() || null,
       instagram: instagram.trim() || null,
       ativo,
+      categoria_id: categoriaId,
     };
 
     const { error } = perfilAtual
@@ -71,7 +82,6 @@ export default function FormularioPerfilProfissional({
       : await supabase.from("profissionais_marketplace").insert({
           ...dados,
           profile_id: profileId,
-          categoria: "personal_trainer",
         });
 
     if (error) {
@@ -87,6 +97,26 @@ export default function FormularioPerfilProfissional({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="categoria-profissional" className="font-titulo text-sm font-semibold text-tinta">
+          Tipo de serviço
+        </label>
+        <select
+          id="categoria-profissional"
+          required
+          value={categoriaId}
+          onChange={(e) => setCategoriaId(e.target.value)}
+          className="rounded-md border-2 border-papel-2 bg-white px-4 py-3 text-base text-tinta outline-none transition-colors focus:border-verde"
+        >
+          {categorias.length === 0 && <option value="">Nenhuma categoria disponível</option>}
+          {categorias.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.emoji ? `${c.emoji} ` : ""}
+              {c.nome}
+            </option>
+          ))}
+        </select>
+      </div>
       <Campo
         rotulo="Nome"
         type="text"

@@ -75,7 +75,7 @@ export async function buscarDadosAdmin(admin: SupabaseClient): Promise<DadosAdmi
       .limit(20),
     admin
       .from("profissionais_marketplace")
-      .select("categoria, verificado"),
+      .select("verificado, categorias_servico(nome)"),
     admin.from("demandas_marketplace").select("status"),
     admin.from("interesses_demanda").select("profissional_profile_id, nome_interessado"),
     admin
@@ -98,11 +98,16 @@ export async function buscarDadosAdmin(admin: SupabaseClient): Promise<DadosAdmi
     porFunilMapa.set(lead.quiz, (porFunilMapa.get(lead.quiz) ?? 0) + 1);
   }
 
-  // Marketplace: profissionais por categoria
+  // Marketplace: profissionais por categoria (categoria virou FK em v1.21 —
+  // categorias_servico vem embutido na query acima)
   const porCategoriaMapa = new Map<string, number>();
   let verificados = 0;
   for (const p of profissionais ?? []) {
-    porCategoriaMapa.set(p.categoria, (porCategoriaMapa.get(p.categoria) ?? 0) + 1);
+    const categoriaRelacionada = Array.isArray(p.categorias_servico)
+      ? p.categorias_servico[0]
+      : p.categorias_servico;
+    const nomeCategoria = categoriaRelacionada?.nome ?? "Sem categoria";
+    porCategoriaMapa.set(nomeCategoria, (porCategoriaMapa.get(nomeCategoria) ?? 0) + 1);
     if (p.verificado) verificados += 1;
   }
 

@@ -6,6 +6,7 @@ import TelaBloqueada from "@/components/app/TelaBloqueada";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
 import { nivelAtende, nivelPF, nomeNivelPF } from "@/lib/assinaturas";
+import { listarCategoriasAtivas } from "@/lib/categorias-servico";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function MarketplaceAppPage() {
@@ -27,7 +28,7 @@ export default async function MarketplaceAppPage() {
     return (
       <TelaBloqueada
         titulo="Marketplace"
-        descricao="Personal trainers da região e o Balcão de Demandas ficam disponíveis assinando o plano PF."
+        descricao="Profissionais da região e o Balcão de Demandas ficam disponíveis assinando o plano PF."
         nomePlano={nomeNivelPF("base")}
       />
     );
@@ -35,24 +36,35 @@ export default async function MarketplaceAppPage() {
 
   const temPremium = nivelAtende(nivel, "premium");
 
-  const { data: perfil } = await supabase
-    .from("profissionais_marketplace")
-    .select("id, nome, descricao, cidade, contato, instagram, ativo, verificado")
-    .eq("profile_id", user.id)
-    .maybeSingle();
+  const [{ data: perfil }, categorias] = await Promise.all([
+    supabase
+      .from("profissionais_marketplace")
+      .select("id, nome, descricao, cidade, contato, instagram, ativo, verificado, categoria_id")
+      .eq("profile_id", user.id)
+      .maybeSingle(),
+    listarCategoriasAtivas(supabase),
+  ]);
 
   const { data: minhasDemandas } = await supabase
     .from("demandas_marketplace")
     .select(
-      "id, categoria, descricao, local, prazo, valor_oferecido, status, interesses_demanda(id, profissional_profile_id, nome_interessado, contato_interessado, mensagem)"
+      "id, categoria, descricao, local, prazo, valor_oferecido, status, categorias_servico(nome), interesses_demanda(id, profissional_profile_id, nome_interessado, contato_interessado, mensagem)"
     )
     .eq("autor_profile_id", user.id)
     .order("created_at", { ascending: false });
 
-  const demandasFormatadas = (minhasDemandas ?? []).map((d) => ({
-    ...d,
-    interesses: d.interesses_demanda ?? [],
-  }));
+  // categoria virou FK opcional em v1.21 — mesma lógica de fallback do
+  // mural público (ver app/marketplace/demandas/page.tsx).
+  const demandasFormatadas = (minhasDemandas ?? []).map((d) => {
+    const categoriaRelacionada = Array.isArray(d.categorias_servico)
+      ? d.categorias_servico[0]
+      : d.categorias_servico;
+    return {
+      ...d,
+      categoria: categoriaRelacionada?.nome ?? d.categoria,
+      interesses: d.interesses_demanda ?? [],
+    };
+  });
 
   return (
     <div className="mx-auto flex max-w-md flex-col gap-5">
@@ -69,9 +81,9 @@ export default async function MarketplaceAppPage() {
           <p className="text-sm text-tinta-suave">
             {perfil
               ? "Edita as informações que aparecem no diretório público."
-              : "Ainda não tens um perfil. Cria pra aparecer no diretório de Personal Trainers."}
+              : "Ainda não tens um perfil. Cria pra aparecer no diretório de profissionais da tua categoria."}
           </p>
-          <FormularioPerfilProfissional profileId={user.id} perfilAtual={perfil ?? null} />
+          <FormularioPerfilProfissional profileId={user.id} perfilAtual={perfil ?? null} categorias={categorias} />
         </Card>
       ) : (
         <Card className="flex flex-col gap-2">
@@ -80,7 +92,7 @@ export default async function MarketplaceAppPage() {
             <Selo variante="terracota">{nomeNivelPF("premium")}</Selo>
           </div>
           <p className="text-sm text-tinta-suave">
-            Aparecer no diretório de Personal Trainers e receber recomendação da IA no plano de
+            Aparecer no diretório de profissionais e receber recomendação da IA no plano de
             hábitos do Quiz-Funil é um benefício do PF Premium.
           </p>
           <Link
@@ -93,12 +105,12 @@ export default async function MarketplaceAppPage() {
       )}
 
       <Card className="flex flex-col gap-2">
-        <p className="text-sm text-tinta-suave">Ver o diretório público:</p>
+        <p className="text-sm text-tinta-suave">Ver os diretórios públicos:</p>
         <Link
-          href="/marketplace/personal-trainer"
+          href="/marketplace"
           className="font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
         >
-          Personal Trainers →
+          Marketplace →
         </Link>
       </Card>
 
