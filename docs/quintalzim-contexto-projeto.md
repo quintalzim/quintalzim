@@ -1,6 +1,6 @@
 # QUINTALZIM — Documento de Contexto do Projeto
 
-*Versão 1.18 — setembro/2026. Este documento dá contexto completo a qualquer nova conversa. Atualizar ao fim de sessões que mudem decisões, arquitetura ou estado.*
+*Versão 1.19 — setembro/2026. Este documento dá contexto completo a qualquer nova conversa. Atualizar ao fim de sessões que mudem decisões, arquitetura ou estado.*
 
 *Mudanças da v1.1: separação formal dos dois modelos de negócio (B2C direto e B2B2C), arquitetura de WhatsApp definida (número próprio do Quintalzim vs número de cada Empresa via Coexistence/Embedded Signup), "Plano B" de onboarding sem WhatsApp (cadastro direto no ecossistema via PWA), e mudança de precificação da Meta anunciada para 1/out/2026.*
 
@@ -136,14 +136,15 @@ Portal único (super app PWA) por assinatura para pessoas e pequenas empresas de
 | Degrau | Faixa | Papel |
 |---|---|---|
 | PF Base | R$ 19/mês | Volume, porta de entrada |
-| PF Premium | R$ 39/mês | Acompanhamento ativo via WhatsApp |
+| PF Premium | R$ 39/mês | Acompanhamento ativo via WhatsApp + virar Profissional no Marketplace |
 | Empresa Start | R$ 49/mês | Vitrine + agendamento + catálogo básico |
 | Empresa Pro | R$ 79/mês | + Recepcionista IA + posts diários |
 | Empresa Completo | R$ 99/mês | + vendas, despesas, DRE, clube de assinaturas* |
-| Profissional | R$ 29–49/mês | Perfil no marketplace + recomendação da IA |
 | Sob medida | R$ 300–1.500 setup + mensalidade | Financia o ano 1; laboratório do SaaS |
 
 \* Fase 2. Complementos: setup de Vitrine (R$ 97–197), comissões de marketplace (5–12%, Fase 2), criadores externos (take 20–30%, Fase 2).
+
+**Degrau "Profissional" eliminado (05/set/2026)** — decisão do usuário: virar Profissional no Marketplace (perfil público + recomendação da IA) deixou de ter assinatura própria e virou um benefício do PF Premium. Ver seção 6 pro detalhe da mudança.
 
 Custo estimado de IA por assinante ativo: PF R$ 3–8/mês; Empresa R$ 10–30/mês. **A partir de out/2026, somar custo de mensageria WhatsApp por assinante Empresa (ver seção 10.4) — valor exato ainda não publicado pela Meta.**
 
@@ -302,6 +303,8 @@ O branch de **Calorias por Foto**, no próprio "Prontim - Atendimento" (`N9EOkEY
 - **Bug corrigido: dica do dia do Briefing Financeiro sempre a mesma (05/set)** — o usuário notou que, apesar do texto ser reescrito todo dia, a dica de fundo sempre girava em torno do mesmo tema (comparar valor à vista vs parcelado). Causa: o node "Gerar Dica do Dia" (workflow "Briefing Financeiro Diário", `rbrBh55sRq4XZsz2`) pedia pro Sonnet "variar o tema" sem dar nenhum tema concreto nem lembrar o que já tinha sido dito antes — na prática o modelo converge sempre pra resposta estatisticamente mais provável pro mesmo prompt genérico. Corrigido de forma determinística, sem depender da "criatividade" do modelo: novo node "Escolher Tema do Dia" (Code), antes da chamada de IA, escolhe um de 16 temas fixos de finanças pessoais (reserva de emergência, renegociar dívida atrasada, juros rotativo do cartão, assinaturas esquecidas, compra por impulso, gastos sazonais, poupar vs investir, fiado entre conhecidos, comparar preços, gastos miúdos do dia a dia, imprevistos, cartão como ferramenta, contas em dia, separar dinheiro por objetivo, revisão de gastos — e o próprio "à vista vs parcelado", que virou só 1 de 16 em vez de sempre) usando o dia do ano módulo 16, garantindo que o tema muda todo dia e só se repete depois de ~2 semanas. O prompt do "Gerar Dica do Dia" agora recebe esse tema explícito (`{{ $json.tema }}`) e é instruído a escrever especificamente sobre ele, com uma ressalva explícita pra não cair de volta no exemplo de parcelamento fora desse caso. Testado via `test_workflow` (pipeline completo, tema do dia calculado corretamente a partir da data real) antes de publicar.
 
 - **Confirmação geral do usuário (05/set):** Asaas validado ponta a ponta, todos os deploys da sessão no ar na Vercel, todas as migrations SQL pendentes rodadas no Supabase (`tarefas-compras.sql`, `superadmin.sql`, `clube-assinaturas.sql`, `favoritos-apps.sql`). Split de pagamento na origem (Fase 2) segue reafirmado como não prioridade agora — sem mudança na decisão já registrada (pendência 16, seção 7).
+
+- **Assinatura Profissional eliminada; virar Profissional agora exige PF Premium (05/set)** — decisão do usuário ao revisar a proposta de desacoplar Marketplace/Profissional (ver parágrafo anterior): em vez de manter a assinatura própria `profissional` (R$29) separada do PF, ela foi eliminada de vez. `lib/planos.ts` perdeu a categoria `profissional` (linhas antigas em `assinaturas` com essa categoria ficam órfãs, sem tela nenhuma lendo mais isso). Em `/app/marketplace`, o card "Assinatura Profissional" foi removido; a seção "Perfil profissional" (criar/editar o perfil que aparece no diretório de Personal Trainers) só é exibida pra quem tem PF Premium — sem Premium, aparece um upsell inline linkando pra `/app/para-voce`, que ganhou um novo item na lista de recursos Premium só pra esse benefício. **Pergunta paralela resolvida na mesma leva:** o usuário perguntou se hoje só assinante consegue aceitar uma demanda no Balcão — investigação mostrou que **não**: a página pública `/marketplace/demandas` só exigia estar logado pra manifestar interesse, sem checar plano nenhum (qualquer conta, mesmo sem nenhuma assinatura ativa, conseguia). Decisão do usuário: aceitar demanda passa a exigir PF Base **ou** Premium (não precisa ser especificamente quem tem perfil de Profissional) — `ListaDemandas.tsx` agora recebe `temPF` calculado no server e só mostra o botão "Tenho interesse" pra quem tem PF ativo; sem PF (mas logado), mostra aviso convidando a assinar; sem login, mantém o aviso de sempre. Publicar uma demanda continua exigindo só PF Base, sem mudança (já era assim por estar dentro de `/app/marketplace`, que segue exigindo Base pra abrir a página inteira). **Trade-off que ficou registrado, não resolvido nesta leva:** o diretório público (`/marketplace/personal-trainer`) continua listando qualquer perfil com `ativo=true`, sem checar retroativamente se aquele profissional ainda tem PF Premium — alguém que teve Premium, criou perfil, e depois deu downgrade continua aparecendo lá até alguém notar e desativar manualmente. `npx tsc --noEmit` limpo.
 
 **Comando de teste padrão (simula mensagem chegando):**
 ```bash
