@@ -117,13 +117,32 @@ export default async function CatalogoPage() {
             </div>
           </div>
           <p className="text-sm text-tinta-suave">
-            Personal trainers da região e o Balcão de Demandas — peça ajuda ou ofereça a sua.
+            Diretórios de profissionais da região — personal trainer, pintor, pedreiro e outros.
           </p>
           <Link
             href={temBase ? "/marketplace" : "/app/para-voce"}
             className="mt-1 font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
           >
             {temBase ? "Abrir Marketplace →" : "Assinar pra desbloquear →"}
+          </Link>
+        </Card>
+
+        <Card className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-tinta">Balcão de Demandas 📋</h2>
+            <div className="flex items-center gap-2">
+              <BotaoFavoritar appId="balcao-demandas" favoritoInicial={ehFavorito("balcao-demandas")} />
+              <Selo variante={temBase ? "verde" : "terracota"}>{temBase ? "Ativo" : "Base"}</Selo>
+            </div>
+          </div>
+          <p className="text-sm text-tinta-suave">
+            Precisa de algo pontual? Publica aqui. Pode ajudar? Manifesta interesse nos pedidos abertos.
+          </p>
+          <Link
+            href={temBase ? "/marketplace/demandas" : "/app/para-voce"}
+            className="mt-1 font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
+          >
+            {temBase ? "Abrir Balcão de Demandas →" : "Assinar pra desbloquear →"}
           </Link>
         </Card>
 

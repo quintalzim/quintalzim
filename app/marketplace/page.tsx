@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Botao from "@/components/ui/Botao";
 import Card from "@/components/ui/Card";
 import Selo from "@/components/ui/Selo";
 import { listarCategoriasAtivas } from "@/lib/categorias-servico";
@@ -56,15 +57,14 @@ export default async function MarketplacePage() {
           </Link>
         </div>
 
-        <Card className="flex flex-col gap-2">
-          <p className="text-sm text-tinta-suave">
+        <Card className="flex flex-col items-center gap-3 bg-verde/5 text-center">
+          <p className="text-base font-semibold text-tinta">
             É profissional e quer aparecer no Marketplace, ou tem algo pontual pra resolver?
           </p>
-          <Link
-            href="/app/marketplace"
-            className="font-titulo text-sm font-semibold text-verde-escuro underline underline-offset-2"
-          >
-            Entra no Quintalzim →
+          <Link href="/app/marketplace" className="w-full sm:w-auto">
+            <Botao type="button" className="w-full sm:w-auto">
+              Entrar no Quintalzim →
+            </Botao>
           </Link>
         </Card>
       </div>

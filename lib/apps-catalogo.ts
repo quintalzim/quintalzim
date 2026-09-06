@@ -7,7 +7,7 @@ import type { NivelPF } from "@/lib/assinaturas";
 // Quintal de Finanças aponta pro Catálogo (não pro próprio app externo)
 // porque o botão "Abrir" de lá depende de um handshake de SSO client-side
 // (token de sessão), que não dá pra replicar num link simples aqui.
-export type AppId = "financas" | "tarefas" | "prontim" | "marketplace" | "ferramentas";
+export type AppId = "financas" | "tarefas" | "prontim" | "marketplace" | "balcao-demandas" | "ferramentas";
 
 export type DefinicaoApp = {
   id: AppId;
@@ -24,6 +24,13 @@ export const APPS_CATALOGO: DefinicaoApp[] = [
   { id: "tarefas", nome: "Tarefas & Compras", icone: "📝", href: "/app/tarefas", minimoPF: "base" },
   { id: "prontim", nome: "Chat com o Prontim", icone: "💬", href: "/app/prontim", minimoPF: "base" },
   { id: "marketplace", nome: "Marketplace", icone: "🤝", href: "/marketplace", minimoPF: "base" },
+  {
+    id: "balcao-demandas",
+    nome: "Balcão de Demandas",
+    icone: "📋",
+    href: "/marketplace/demandas",
+    minimoPF: "base",
+  },
   { id: "ferramentas", nome: "Ferramentas", icone: "🧮", href: "/ferramentas" },
 ];
 
